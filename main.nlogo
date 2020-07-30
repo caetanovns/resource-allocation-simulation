@@ -4,14 +4,14 @@ globals [
 
 tasks-own [
   stage
-  my-current-assigned
-  level-required
+  my-current-assigned ; Workers atual a qual a tarefa está associdada
+  level-required ; Nível necessário de realização da tarefa. É representada por um valor numérico onde o worker decrementa de acordo com seu skill-level
 ]
 
 workers-own [
-  working
-  my-current-task
-  skill-level
+  working ;Flag onde indica se o worker está ocupado ou não
+  my-current-task ; Indica a Tarefa atual do Worker
+  skill-level ; Nível do Worker
 ]
 
 breed [workers worker]
@@ -28,7 +28,7 @@ end
 
 to go
 
-  ask tasks [if stage = 1 [forward 0]]
+  ;ask tasks [if stage = 1 [forward 0]]
 
   ask workers [
     set my-current-task one-of other tasks with [color = white]
@@ -61,14 +61,10 @@ to setup-turtles
 
   set-default-shape workers "person"
 
-  create-workers 4 [
+  create-workers worker_number [
+    set xcor random-xcor set ycor random-ycor
     set color blue
   ]
-
-  ask worker 0 [setxy -10 -10]
-  ask worker 1 [setxy  10 10]
-  ask worker 2 [setxy  10 -10]
-  ask worker 3 [setxy  -10 10]
 
   create-tasks task_number [
     set xcor random-xcor set ycor random-ycor
@@ -77,15 +73,6 @@ to setup-turtles
     set shape "letter sealed"
     set stage 1
   ]
-
-  ;create-tasks 10 [
-  ;  set xcor random-xcor
-  ;  setxy (19 + (random-float 2)) (-19.5 + (random-float -2))
-  ;  set heading 90
-  ;  set color gray
-  ;  set shape "letter sealed"
-  ;  set stage 0
-  ;]
 
   create-managers 1 [
     setxy 0 5
@@ -119,6 +106,7 @@ to set-run-tasks
   ask tasks [
     ifelse show-task-level? [set label level-required set label-color red] [set label ""]
   ]
+
 end
 
 to add-tasks-to-doing
@@ -140,7 +128,11 @@ end
 to set-tasks-done
   ask tasks [
     if level-required <= 0
-    [die]
+    [
+      ask my-links [die]
+      set stage 2
+      set color red
+    ]
   ]
 end
 @#$#@#$#@
@@ -286,7 +278,7 @@ task_number
 task_number
 1
 20
-20.0
+4.0
 1
 1
 NIL
@@ -311,15 +303,30 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count tasks"
 
 SWITCH
-4
-208
-177
-241
+12
+352
+185
+385
 show-task-level?
 show-task-level?
 0
 1
 -1000
+
+SLIDER
+7
+208
+180
+242
+worker_number
+worker_number
+2
+10
+2.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
