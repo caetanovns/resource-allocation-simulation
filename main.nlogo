@@ -1,3 +1,4 @@
+extensions [array]
 globals [
 
 ]
@@ -6,12 +7,16 @@ tasks-own [
   stage
   my-current-assigned ; Workers atual a qual a tarefa está associdada
   level-required ; Nível necessário de realização da tarefa. É representada por um valor numérico onde o worker decrementa de acordo com seu skill-level
+  level-required-list ;Lista que contem o nível de habilidade necessário para o tipo de worker que vai executar
+  task-level-required ;
+
 ]
 
 workers-own [
   working ;Flag onde indica se o worker está ocupado ou não
   my-current-task ; Indica a Tarefa atual do Worker
   skill-level ; Nível do Worker
+  skill-level-list ; Lista que deve conter o valor de cada habilidade do worker
 ]
 
 breed [workers worker]
@@ -24,11 +29,30 @@ to setup
   ask patches [ set pcolor white]
   ask workers [set color red set skill-level (random 5) + 1]
   ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white set level-required random 50]]
+
+  ask tasks [
+    set level-required-list [20 40 50 60 65]
+    set task-level-required random 5 ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+  ]
+
+  ask workers [
+    set skill-level-list []
+    set skill-level-list lput (random 10 + 1) skill-level-list
+    set skill-level-list lput (random 10 + 1) skill-level-list
+    set skill-level-list lput (random 10 + 1) skill-level-list
+    set skill-level-list lput (random 10 + 1) skill-level-list
+    set skill-level-list lput (random 10 + 1) skill-level-list
+  ]
+
 end
 
 to go
 
-  ;ask tasks [if stage = 1 [forward 0]]
+  ask tasks [
+    ;show item 0 skill-level-list
+    ;show item 0 level-required-list
+    ;show task-level-required
+  ]
 
   ask workers [
     set my-current-task one-of other tasks with [color = white]
@@ -90,17 +114,16 @@ to set-run-tasks
 
   ask links [
     let nivel nobody
+
     ; Workers
     ask end1 [
-      ;show skill-level
-      set nivel skill-level
+      set nivel skill-level-list
     ]
 
     ;Tasks
     ask end2 [
-      set level-required  level-required - nivel
+      set level-required  level-required - (item task-level-required nivel)
     ]
-
   ]
 
   ask tasks [
@@ -317,12 +340,27 @@ SLIDER
 7
 208
 180
-242
+241
 worker_number
 worker_number
 2
 10
 2.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+119
+292
+292
+326
+n_skill_level
+n_skill_level
+1
+10
+7.0
 1
 1
 NIL
