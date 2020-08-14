@@ -1,4 +1,3 @@
-extensions [array]
 globals [
 
 ]
@@ -24,24 +23,33 @@ breed [managers manager]
 breed [tasks task]
 
 to setup
+
   __clear-all-and-reset-ticks
   setup-turtles
+
   ask patches [ set pcolor white]
   ask workers [set color red set skill-level (random 5) + 1]
-  ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white set level-required random 50]]
+  ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
 
   ask tasks [
-    set level-required-list [20 40 50 60 65]
-    set task-level-required random 5 ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+    set level-required-list []
+
+    foreach range n_skill_level [
+      set level-required-list lput (random 10 + 1) level-required-list
+    ]
+
+    set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+    set level-required ((item task-level-required level-required-list) * 100)
+
   ]
 
   ask workers [
     set skill-level-list []
-    set skill-level-list lput (random 10 + 1) skill-level-list
-    set skill-level-list lput (random 10 + 1) skill-level-list
-    set skill-level-list lput (random 10 + 1) skill-level-list
-    set skill-level-list lput (random 10 + 1) skill-level-list
-    set skill-level-list lput (random 10 + 1) skill-level-list
+
+    foreach range n_skill_level [
+      set skill-level-list lput (random 10 + 1) skill-level-list
+    ]
+
   ]
 
 end
@@ -86,12 +94,12 @@ to setup-turtles
   set-default-shape workers "person"
 
   create-workers worker_number [
-    set xcor random-xcor set ycor random-ycor
+    set xcor random -15  set ycor random-ycor
     set color blue
   ]
 
   create-tasks task_number [
-    set xcor random-xcor set ycor random-ycor
+    set xcor random 15 set ycor random-ycor
     ;set heading 90
     set color gray
     set shape "letter sealed"
@@ -109,6 +117,9 @@ to setup-turtles
   ]
 
 end
+
+;to setup-tasks
+;end
 
 to set-run-tasks
 
@@ -135,16 +146,29 @@ end
 to add-tasks-to-doing
   if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
-      set xcor random-xcor
-      set ycor random-ycor
+      set xcor random 15 set ycor random-ycor
       ;set heading 90
       set color gray
       set shape "letter sealed"
       set stage 1
       set color white
-      set level-required (random 50) + 20
+      ;set level-required (random 50) + 20
       set size 1.5
     ]
+
+    ask tasks [
+    set level-required-list []
+
+    foreach range n_skill_level [
+      set level-required-list lput (random 10 + 1) level-required-list
+    ]
+
+    set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+    set level-required (item task-level-required level-required-list)
+
+  ]
+
+
   ]
 end
 
@@ -155,6 +179,7 @@ to set-tasks-done
       ask my-links [die]
       set stage 2
       set color red
+      hide-turtle
     ]
   ]
 end
@@ -301,7 +326,7 @@ task_number
 task_number
 1
 20
-4.0
+20.0
 1
 1
 NIL
@@ -326,10 +351,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count tasks"
 
 SWITCH
-12
-352
-185
-385
+6
+298
+179
+331
 show-task-level?
 show-task-level?
 0
@@ -345,22 +370,22 @@ worker_number
 worker_number
 2
 10
-2.0
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-119
-292
-292
-326
+7
+251
+180
+284
 n_skill_level
 n_skill_level
 1
 10
-7.0
+10.0
 1
 1
 NIL
