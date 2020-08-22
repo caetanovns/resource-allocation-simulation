@@ -1,5 +1,5 @@
 globals [
-
+  n-sprint
 ]
 
 tasks-own [
@@ -16,6 +16,7 @@ workers-own [
   my-current-task ; Indica a Tarefa atual do Worker
   skill-level ; Nível do Worker
   skill-level-list ; Lista que deve conter o valor de cada habilidade do worker
+  knowledge; Lista que deve conter o conhecimento dos workers sobre o projeto.
 ]
 
 breed [workers worker]
@@ -26,7 +27,7 @@ to setup
 
   __clear-all-and-reset-ticks
   setup-turtles
-
+  set n-sprint 1
   ask patches [ set pcolor white]
   ask workers [set color red set skill-level (random 5) + 1]
   ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
@@ -40,14 +41,15 @@ to setup
 
     set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
     set level-required ((item task-level-required level-required-list) * 100)
-
   ]
 
   ask workers [
     set skill-level-list []
+    set knowledge []
 
     foreach range n_skill_level [
       set skill-level-list lput (random 10 + 1) skill-level-list
+      set knowledge lput 0 knowledge
     ]
 
   ]
@@ -55,7 +57,7 @@ to setup
 end
 
 to go
-
+  if n-sprint >= 10 [ stop ]
   ask tasks [
     ;show item 0 skill-level-list
     ;show item 0 level-required-list
@@ -157,18 +159,16 @@ to add-tasks-to-doing
     ]
 
     ask tasks [
-    set level-required-list []
+      set level-required-list []
 
-    foreach range n_skill_level [
-      set level-required-list lput (random 10 + 1) level-required-list
+      foreach range n_skill_level [
+        set level-required-list lput (random 10 + 1) level-required-list
+      ]
+
+      set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+      set level-required ((item task-level-required level-required-list) * 100)
     ]
-
-    set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
-    set level-required (item task-level-required level-required-list)
-
-  ]
-
-
+    set n-sprint (n-sprint + 1)
   ]
 end
 
@@ -390,6 +390,17 @@ n_skill_level
 1
 NIL
 HORIZONTAL
+
+MONITOR
+391
+91
+448
+136
+Sprint
+n-sprint
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
