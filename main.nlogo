@@ -1,18 +1,26 @@
+extensions
+[
+  py
+  matrix
+]
+
 globals [
   n-sprint
+  repository ; Matrix que deve armazenar simular os arquivos do sistema e cada arquivo possui um uma indicação de alterações feitas por cada agente
 ]
 
 tasks-own [
   stage
   my-current-assigned ; Workers atual a qual a tarefa está associdada
   level-required ; Nível necessário de realização da tarefa. É representada por um valor numérico onde o worker decrementa de acordo com seu skill-level
-  level-required-list ;Lista que contem o nível de habilidade necessário para o tipo de worker que vai executar
+  level-required-list ; Lista que contem o nível de habilidade necessário para o tipo de worker que vai executar
   task-level-required ;
+  weight ; Variável de peso da tarefa, o peso será usado para o truck factor, uma vez que o agente que realizou a tarefa terá esse peso associado a si.
 
 ]
 
 workers-own [
-  working ;Flag onde indica se o worker está ocupado ou não
+  working ; Flag onde indica se o worker está ocupado ou não
   my-current-task ; Indica a Tarefa atual do Worker
   skill-level ; Nível do Worker
   skill-level-list ; Lista que deve conter o valor de cada habilidade do worker
@@ -54,6 +62,15 @@ to setup
 
   ]
 
+  py:setup "env/bin/python"
+  (py:run
+    "import hello"
+    "hello.hello_function()"
+  )
+
+  set repository matrix:make-constant 5 worker_number 0
+  print matrix:pretty-print-text repository
+
 end
 
 to go
@@ -66,13 +83,15 @@ to go
 
   ask workers [
     set my-current-task one-of other tasks with [color = white]
-
+    matrix:set repository 0 who ((matrix:get repository 0 who ) + 10)
+    ;print matrix:pretty-print-text repository
     if count(my-links) = 0 [set color red]
 
     if my-current-task != nobody and color = red [
       create-link-to my-current-task
       set color blue
       ask my-current-task [set color yellow set shape "letter opened"]
+      ;set knowledge item task-level-required level-required-list
     ]
   ]
 
@@ -370,7 +389,7 @@ worker_number
 worker_number
 2
 10
-10.0
+2.0
 1
 1
 NIL
