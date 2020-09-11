@@ -16,7 +16,7 @@ tasks-own [
   level-required-list ; Lista que contem o nível de habilidade necessário para o tipo de worker que vai executar
   task-level-required ;
   weight ; Variável de peso da tarefa, o peso será usado para o truck factor, uma vez que o agente que realizou a tarefa terá esse peso associado a si.
-
+  file; Indica o arquivo que a tarefa altera no repositório
 ]
 
 workers-own [
@@ -24,7 +24,7 @@ workers-own [
   my-current-task ; Indica a Tarefa atual do Worker
   skill-level ; Nível do Worker
   skill-level-list ; Lista que deve conter o valor de cada habilidade do worker
-  knowledge; Lista que deve conter o conhecimento dos workers sobre o projeto.
+  knowledge-list; Lista que deve conter o conhecimento dos workers sobre o projeto.
 ]
 
 breed [workers worker]
@@ -41,6 +41,7 @@ to setup
   ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
 
   ask tasks [
+
     set level-required-list []
 
     foreach range n_skill_level [
@@ -49,61 +50,34 @@ to setup
 
     set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
     set level-required ((item task-level-required level-required-list) * 100)
+
   ]
 
   ask workers [
     set skill-level-list []
-    set knowledge []
+    set knowledge-list []
 
     foreach range n_skill_level [
       set skill-level-list lput (random 10 + 1) skill-level-list
-      set knowledge lput 0 knowledge
+      set knowledge-list lput 0 knowledge-list
     ]
 
   ]
 
-  py:setup "env/bin/python"
-  (py:run
-    "import hello"
-    "hello.hello_function()"
-  )
+  ;py:setup "env/bin/python"
+  ;(py:run
+  ;  "import hello"
+  ;  "hello.hello_function()"
+  ;)
 
-  set repository matrix:make-constant 5 worker_number 0
-  print matrix:pretty-print-text repository
+  set repository matrix:make-constant 10 worker_number 0
+  ;print matrix:pretty-print-text repository
 
 end
 
 to go
   if n-sprint >= 10 [ stop ]
-  ask tasks [
-    ;show item 0 skill-level-list
-    ;show item 0 level-required-list
-    ;show task-level-required
-  ]
-
-  ask workers [
-    set my-current-task one-of other tasks with [color = white]
-    matrix:set repository 0 who ((matrix:get repository 0 who ) + 10)
-    ;print matrix:pretty-print-text repository
-    if count(my-links) = 0 [set color red]
-
-    if my-current-task != nobody and color = red [
-      create-link-to my-current-task
-      set color blue
-      ask my-current-task [set color yellow set shape "letter opened"]
-      ;set knowledge item task-level-required level-required-list
-    ]
-  ]
-
-  ask workers
-  [
-    ;show count(my-links) ;; shows an agentset containing the link 0 1
-  ]
-
-  ask links [
-    ;show end2
-  ]
-
+  setup-tasks
   add-tasks-to-doing
   set-run-tasks
   set-tasks-done
@@ -125,6 +99,7 @@ to setup-turtles
     set color gray
     set shape "letter sealed"
     set stage 1
+    set file random 10
   ]
 
   create-managers 1 [
@@ -139,8 +114,40 @@ to setup-turtles
 
 end
 
-;to setup-tasks
-;end
+to setup-tasks
+    ask workers [
+    set my-current-task one-of other tasks with [color = white]
+    ;matrix:set repository 0 who ((matrix:get repository 0 who ) + 10)
+    ;print matrix:pretty-print-text repository
+    if count(my-links) = 0 [set color red]
+
+    if my-current-task != nobody and color = red [
+      create-link-to my-current-task
+      set color blue
+      let weight_task nobody
+      let tsk-lv-required nobody
+      let level nobody
+      let file_h nobody
+      ;Seção para adicionar no vetor de conhecimento do worker
+      ask my-current-task [
+        set color yellow
+        set shape "letter opened"
+        set weight_task weight
+        set tsk-lv-required task-level-required
+        set file_h file
+      ]
+
+      set level item tsk-lv-required knowledge-list
+      set knowledge-list remove-item tsk-lv-required knowledge-list
+      ;Ainda resta apenas colocar a variável de weight da tarefa.
+      set knowledge-list insert-item tsk-lv-required knowledge-list (level + 1)
+      ;Inseri na matrix de repositório de files
+      matrix:set repository file_h who (matrix:get repository file_h who) + 1
+
+
+    ]
+  ]
+end
 
 to set-run-tasks
 
@@ -175,6 +182,7 @@ to add-tasks-to-doing
       set color white
       ;set level-required (random 50) + 20
       set size 1.5
+      set file random 10
     ]
 
     ask tasks [
@@ -204,13 +212,13 @@ to set-tasks-done
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-1021
-10
-1578
-568
+481
+19
+929
+468
 -1
 -1
-16.64
+13.33333333333334
 1
 10
 1
@@ -352,10 +360,10 @@ NIL
 HORIZONTAL
 
 PLOT
-575
-21
-897
-190
+204
+157
+473
+417
 Tarefas da Sprint
 time
 total
