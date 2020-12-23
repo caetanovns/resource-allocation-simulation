@@ -6,25 +6,25 @@ extensions
 
 globals [
   n-sprint
-  repository ; Matrix que deve armazenar simular os arquivos do sistema e cada arquivo possui um uma indicação de alterações feitas por cada agente
+  repository
 ]
 
 tasks-own [
   stage
-  my-current-assigned ; Workers atual a qual a tarefa está associdada
-  level-required ; Nível necessário de realização da tarefa. É representada por um valor numérico onde o worker decrementa de acordo com seu skill-level
-  level-required-list ; Lista que contem o nível de habilidade necessário para o tipo de worker que vai executar
-  task-level-required ;
-  weight ; Variável de peso da tarefa, o peso será usado para o truck factor, uma vez que o agente que realizou a tarefa terá esse peso associado a si.
-  file; Indica o arquivo que a tarefa altera no repositório
+  my-current-assigned
+  level-required
+  level-required-list
+  task-level-required
+  weight
+  file
 ]
 
 workers-own [
-  working ; Flag onde indica se o worker está ocupado ou não
-  my-current-task ; Indica a Tarefa atual do Worker
-  skill-level ; Nível do Worker
-  skill-level-list ; Lista que deve conter o valor de cada habilidade do worker
-  knowledge-list; Lista que deve conter o conhecimento dos workers sobre o projeto.
+  working
+  my-current-task
+  skill-level
+  skill-level-list
+  knowledge-list
 ]
 
 breed [workers worker]
@@ -48,7 +48,7 @@ to setup
       set level-required-list lput (random 10 + 1) level-required-list
     ]
 
-    set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+    set task-level-required random n_skill_level
     set level-required ((item task-level-required level-required-list) * 100)
 
   ]
@@ -64,19 +64,34 @@ to setup
 
   ]
 
-  ;py:setup "env/bin/python"
-  ;(py:run
-  ;  "import hello"
-  ;  "hello.hello_function()"
-  ;)
-
   set repository matrix:make-constant 10 worker_number 0
-  ;print matrix:pretty-print-text repository
 
 end
 
 to go
-  if n-sprint >= 10 [ stop ]
+  if n-sprint >= n_sprints [
+    ask workers
+    [
+      write "Agente : " print who
+      write "Média : " print mean knowledge-list
+      write "Variancia : " print variance knowledge-list
+      write "STDev : " print standard-deviation knowledge-list
+      write "Median : " print median knowledge-list
+      write "Min : " print min knowledge-list
+      write "Max : " print max knowledge-list
+      write "Dataset : " print knowledge-list
+      print "---------"
+    ]
+    write "Sprints" print n_sprints
+    write "Média : " print mean [mean knowledge-list] of workers
+    write "Variancia : " print mean [variance knowledge-list] of workers
+    write "STDev : " print mean [standard-deviation knowledge-list] of workers
+    write "Median : " print mean [median knowledge-list] of workers
+    write "Min : " print mean [min knowledge-list] of workers
+    write "Max : " print mean [max knowledge-list] of workers
+    print "---------"
+
+    stop ]
   setup-tasks
   add-tasks-to-doing
   set-run-tasks
@@ -95,7 +110,6 @@ to setup-turtles
 
   create-tasks task_number [
     set xcor random 15 set ycor random-ycor
-    ;set heading 90
     set color gray
     set shape "letter sealed"
     set stage 1
@@ -117,8 +131,6 @@ end
 to setup-tasks
     ask workers [
     set my-current-task one-of other tasks with [color = white]
-    ;matrix:set repository 0 who ((matrix:get repository 0 who ) + 10)
-    ;print matrix:pretty-print-text repository
     if count(my-links) = 0 [set color red]
 
     if my-current-task != nobody and color = red [
@@ -128,7 +140,6 @@ to setup-tasks
       let tsk-lv-required nobody
       let level nobody
       let file_h nobody
-      ;Seção para adicionar no vetor de conhecimento do worker
       ask my-current-task [
         set color yellow
         set shape "letter opened"
@@ -139,9 +150,7 @@ to setup-tasks
 
       set level item tsk-lv-required knowledge-list
       set knowledge-list remove-item tsk-lv-required knowledge-list
-      ;Ainda resta apenas colocar a variável de weight da tarefa.
       set knowledge-list insert-item tsk-lv-required knowledge-list (level + 1)
-      ;Inseri na matrix de repositório de files
       matrix:set repository file_h who (matrix:get repository file_h who) + 1
 
 
@@ -154,12 +163,10 @@ to set-run-tasks
   ask links [
     let nivel nobody
 
-    ; Workers
     ask end1 [
       set nivel skill-level-list
     ]
 
-    ;Tasks
     ask end2 [
       set level-required  level-required - (item task-level-required nivel)
     ]
@@ -175,12 +182,10 @@ to add-tasks-to-doing
   if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
-      ;set heading 90
       set color gray
       set shape "letter sealed"
       set stage 1
       set color white
-      ;set level-required (random 50) + 20
       set size 1.5
       set file random 10
     ]
@@ -192,7 +197,7 @@ to add-tasks-to-doing
         set level-required-list lput (random 10 + 1) level-required-list
       ]
 
-      set task-level-required random n_skill_level ; Aqui 0 Back , 1 Front, 2 DB, 3 Doc, 4 Test
+      set task-level-required random n_skill_level
       set level-required ((item task-level-required level-required-list) * 100)
     ]
     set n-sprint (n-sprint + 1)
@@ -378,10 +383,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count tasks"
 
 SWITCH
-6
-298
-179
-331
+10
+353
+183
+386
 show-task-level?
 show-task-level?
 0
@@ -397,7 +402,7 @@ worker_number
 worker_number
 2
 10
-2.0
+5.0
 1
 1
 NIL
@@ -428,6 +433,17 @@ n-sprint
 17
 1
 11
+
+INPUTBOX
+8
+286
+181
+346
+n_sprints
+10.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
