@@ -7,6 +7,7 @@ extensions
 globals [
   n-sprint
   repository
+  sprint-status
 ]
 
 tasks-own [
@@ -35,23 +36,24 @@ to setup
 
   __clear-all-and-reset-ticks
   setup-turtles
-  set n-sprint 1
+  set n-sprint 0
+  set sprint-status 1
   ask patches [ set pcolor white]
   ask workers [set color red set skill-level (random 5) + 1]
-  ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
+  ;ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
 
-  ask tasks [
+  ;ask tasks [
 
-    set level-required-list []
+    ;set level-required-list []
 
-    foreach range n_skill_level [
-      set level-required-list lput (random 10 + 1) level-required-list
-    ]
+    ;foreach range n_skill_level [
+    ;  set level-required-list lput (random 10 + 1) level-required-list
+    ;]
 
-    set task-level-required random n_skill_level
-    set level-required ((item task-level-required level-required-list) * 100)
+    ;set task-level-required random n_skill_level
+    ;set level-required ((item task-level-required level-required-list) * 100)
 
-  ]
+  ;]
 
   ask workers [
     set skill-level-list []
@@ -69,33 +71,22 @@ to setup
 end
 
 to go
-  if n-sprint >= n_sprints [
-    ask workers
-    [
-      write "Agente : " print who
-      write "Média : " print mean knowledge-list
-      write "Variancia : " print variance knowledge-list
-      write "STDev : " print standard-deviation knowledge-list
-      write "Median : " print median knowledge-list
-      write "Min : " print min knowledge-list
-      write "Max : " print max knowledge-list
-      write "Dataset : " print knowledge-list
-      print "---------"
-    ]
-    write "Sprints" print n_sprints
-    write "Média : " print mean [mean knowledge-list] of workers
-    write "Variancia : " print mean [variance knowledge-list] of workers
-    write "STDev : " print mean [standard-deviation knowledge-list] of workers
-    write "Median : " print mean [median knowledge-list] of workers
-    write "Min : " print mean [min knowledge-list] of workers
-    write "Max : " print mean [max knowledge-list] of workers
-    print "---------"
 
-    stop ]
-  setup-tasks
-  add-tasks-to-doing
+  if n-sprint >= n_sprints [
+    py:setup "venv/bin/python"
+    py:run "import src.tf.truckfactor as tf"
+    py:set "repository" matrix:to-row-list repository
+    show py:runresult "tf.start_tf(repository)"
+    ;show repository
+    stop
+  ]
+  ;setup-tasks
+  ;add-tasks-to-doing
+  create-sprint
   set-run-tasks
   set-tasks-done
+
+
   tick
 end
 
@@ -108,13 +99,13 @@ to setup-turtles
     set color blue
   ]
 
-  create-tasks task_number [
-    set xcor random 15 set ycor random-ycor
-    set color gray
-    set shape "letter sealed"
-    set stage 1
-    set file random 10
-  ]
+  ;create-tasks task_number [
+  ;  set xcor random 15 set ycor random-ycor
+  ;  set color gray
+  ;  set shape "letter sealed"
+  ;  set stage 1
+  ;  set file random 10
+  ;]
 
   create-managers 1 [
     setxy 0 5
@@ -153,11 +144,11 @@ to setup-tasks
       set knowledge-list insert-item tsk-lv-required knowledge-list (level + 1)
       matrix:set repository file_h who (matrix:get repository file_h who) + 1
 
-
     ]
   ]
 end
 
+; Esta função faz com que seja realizada a tarefa pelo agente, através do link é possível saber qual o agente que se associa a tarefa.
 to set-run-tasks
 
   ask links [
@@ -198,7 +189,7 @@ to add-tasks-to-doing
       ]
 
       set task-level-required random n_skill_level
-      set level-required ((item task-level-required level-required-list) * 100)
+      set level-required ((item task-level-required level-required-list) * 10)
     ]
     set n-sprint (n-sprint + 1)
   ]
@@ -214,7 +205,37 @@ to set-tasks-done
       hide-turtle
     ]
   ]
+  if length [who] of tasks with [stage = 1] = 0 [set sprint-status 1]
 end
+
+to create-sprint
+
+  if sprint-status = 1 and n-sprint < n_sprints [
+
+    add-tasks-to-doing
+
+    py:setup "venv/bin/python"
+    py:run "import src.ga as ga"
+    py:set "repository" matrix:to-row-list repository
+    let result nobody
+    set result py:runresult "ga.main()"
+    show result
+
+    let tasks_ids nobody
+    set tasks_ids sort [who] of tasks with [stage = 1]
+    show tasks_ids
+
+    let i 0
+    foreach result [x ->
+      ask worker x [ create-link-to task item i tasks_ids ]
+      set i i + 1
+    ]
+    set sprint-status 0
+  ]
+end
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 481
@@ -358,7 +379,7 @@ task_number
 task_number
 1
 20
-20.0
+5.0
 1
 1
 NIL
@@ -402,7 +423,7 @@ worker_number
 worker_number
 2
 10
-5.0
+3.0
 1
 1
 NIL
@@ -440,7 +461,7 @@ INPUTBOX
 181
 346
 n_sprints
-10.0
+5.0
 1
 0
 Number
