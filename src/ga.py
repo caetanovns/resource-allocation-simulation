@@ -5,31 +5,53 @@ import time
 from deap import base
 from deap import creator
 from deap import tools
+from numpy.random import seed
+from numpy.random import randint
 
 agents_table = pd.DataFrame.from_records([
-    ['Agent 0', 4, 4, 9, 1, 0, 23],
-    ['Agent 1', 2, 4, 4, 1, 0, 10],
-    ['Agent 2', 8, 3, 9, 26, 35, 85],
-    ['Agent 3', 3, 1, 4, 8, 4, 11],
-    ['Agent 4', 9, 3, 6, 7, 6, 20],
-    ['Agent 5', 0, 3, 8, 7, 6, 20],
+    [4, 4, 9, 1, 0, 23],
+    [2, 4, 4, 1, 0, 10],
+    [8, 3, 9, 26, 35, 85],
+    [3, 1, 4, 8, 4, 11],
+    [9, 3, 6, 7, 6, 20],
+    [0, 3, 8, 7, 6, 20],
 ])
-agents_table.columns = ['Name', 'K0', 'K1', 'K2', 'K3', 'K4', 'K5']
 
 tasks_table = pd.DataFrame.from_records([
-    ['Task 0', 4, 4, 9, 1, 0, 23],
-    ['Task 1', 2, 4, 4, 1, 0, 10],
-    ['Task 2', 8, 3, 9, 26, 35, 85],
-    ['Task 3', 3, 1, 4, 8, 4, 11],
-    ['Task 4', 9, 3, 6, 7, 6, 20],
-    ['Task 5', 9, 3, 6, 7, 6, 20],
-    ['Task 6', 9, 3, 6, 7, 6, 20],
-    ['Task 7', 9, 3, 6, 7, 6, 20],
-    ['Task 8', 9, 3, 6, 7, 6, 20],
-    ['Task 9', 9, 3, 6, 7, 6, 20],
-    ['Task 10', 0, 3, 8, 7, 6, 20],
+    [0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 2, 2, 2],
+    [3, 3, 3, 3, 3, 3],
+    [4, 4, 4, 4, 4, 4],
+    [5, 5, 5, 5, 5, 5],
+    [6, 6, 6, 6, 6, 6],
+    [7, 7, 7, 7, 7, 7],
+    [8, 8, 8, 8, 8, 8],
+    [9, 9, 9, 9, 9, 9],
+    [10, 10, 10, 10, 10, 10],
+]
+)
+
+np_task_table = np.array([[0, 0, 0, 0, 0, 0],
+                          [1, 1, 1, 1, 1, 1],
+                          [2, 2, 2, 2, 2, 2],
+                          [3, 3, 3, 3, 3, 3],
+                          [4, 4, 4, 4, 4, 4],
+                          [5, 5, 5, 5, 5, 5],
+                          [6, 6, 6, 6, 6, 6],
+                          [7, 7, 7, 7, 7, 7],
+                          [8, 8, 8, 8, 8, 8],
+                          [9, 9, 9, 9, 9, 9],
+                          [10, 10, 10, 10, 10, 10],
+                          ])
+
+np_agents_table = np.array([
+    [0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 2, 2, 2],
+    [3, 3, 3, 3, 3, 3],
+    [4, 4, 4, 4, 4, 4],
 ])
-tasks_table.columns = ['Name', 'R0', 'R1', 'R2', 'R3', 'R4', 'R5']
 
 
 def chromosome():
@@ -40,13 +62,40 @@ def evaluate(individual):
     individual = individual[0]
     result_list = []
     for i in range(len(individual)):
-        agent_skills = list(agents_table.iloc[individual[i], 1:agents_table.shape[1]])
-        skills_required = list(tasks_table.iloc[individual[i], 1:tasks_table.shape[1]])
+        # agent_skills = list(agents_table.iloc[individual[i], 0:agents_table.shape[1]])
+        # skills_required = list(tasks_table.iloc[i, 0:tasks_table.shape[1]])
+        agent_skills = np_agents_table[individual[i]]
+        skills_required = np_task_table[i]
+        # result_list.append(1)
         result_list.append(
-            round(np.var(
-                [x + y for x, y in zip(agent_skills, skills_required)]))
+            round(np.var([x + y for x, y in zip(agent_skills, skills_required)]))
         )
-    return result_list
+
+    hist, bins = np.histogram(individual, bins=np.arange(agents_table.shape[1] + 1))
+
+    note_1 = np.mean(result_list)
+    note_2 = np.var(hist)
+    return [note_1 + note_2]
+
+
+def evaluate2(individual):
+    individual = individual[0]
+    result_list = []
+    for i in range(len(individual)):
+        # agent_skills = list(agents_table.iloc[individual[i], 0:agents_table.shape[1]])
+        # skills_required = list(tasks_table.iloc[individual[i], 0:tasks_table.shape[1]])
+        agent_skills = list([1, 2, 3])
+        skills_required = list([1, 2, 3])
+        # result_list.append(1)
+        result_list.append(
+            round(np.var([x + y for x, y in zip(agent_skills, skills_required)]))
+        )
+
+    hist, bins = np.histogram(individual, bins=np.arange(agents_table.shape[1] + 1))
+
+    note_1 = np.mean(result_list)
+    note_2 = np.var(hist)
+    return [note_1 + note_2]
 
 
 def find_best_individual(toolbox):
@@ -61,7 +110,7 @@ def find_best_individual(toolbox):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.5, 0.2
+    CXPB, MUTPB = 0.3, 0.1
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -73,7 +122,7 @@ def find_best_individual(toolbox):
     while g < 50:
         # A new generation
         g = g + 1
-        # print("-- Generation %i --" % g)
+        print("-- Generation %i --" % g)
 
         # Select the next generation individuals
         offspring = toolbox.select(pop, len(pop))
@@ -112,8 +161,61 @@ def find_best_individual(toolbox):
     return best
 
 
-def main():
-    return [0, 0, 1, 1, 2]
+def main(repository, a_table, t_table):
+    # print(pd.DataFrame.from_records(repository))
+
+    global agents_table
+    global tasks_table
+
+    agents_table = pd.DataFrame.from_records(a_table)
+    tasks_table = pd.DataFrame.from_records(t_table)
+
+    # random.seed(47)
+    # values = randint(0, agents_table.shape[0], tasks_table.shape[0])
+    # print(evaluate(values))
+    # return values
+
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
+
+    toolbox = base.Toolbox()
+
+    toolbox.register("chromosome", chromosome)
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+    toolbox.register("evaluate", evaluate)
+    toolbox.register("mate", tools.cxTwoPoint)
+    toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+    toolbox.register("select", tools.selTournament, tournsize=3)
+
+    # pop = toolbox.population(n=1)
+
+    # print(evaluate(pop[0]))
+    # return [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+
+    best_solution = find_best_individual(toolbox)
+    # print(best_solution[0])
+    # hist, bins = np.histogram(best_solution[0], bins=np.arange(agents_table.shape[1] + 1))
+    # print(hist)
+    # print(evaluate(best_solution))
+    # print(round(np.var(evaluate(best_solution))))
+    return best_solution[0]
+
+
+def main_test():
+    # print(pd.DataFrame.from_records(repository))
+    global agents_table
+    global tasks_table
+
+    agents_table = pd.DataFrame.from_records([
+        [0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1],
+        [2, 2, 2, 2, 2, 2],
+        [3, 3, 3, 3, 3, 3],
+        [4, 4, 4, 4, 4, 4],
+    ])
+
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
 
@@ -130,11 +232,13 @@ def main():
 
     best_solution = find_best_individual(toolbox)
     print(best_solution[0])
+    hist, bins = np.histogram(best_solution[0], bins=np.arange(agents_table.shape[0] + 1))
+    print(hist)
     return best_solution[0]
 
 
 if __name__ == '__main__':
     start = time.time()
-    # main()
+    main_test()
     end = time.time()
     print(f"Runtime of the program is {end - start}")

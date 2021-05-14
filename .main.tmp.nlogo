@@ -190,7 +190,7 @@ to add-tasks-to-doing
       set level-required-list []
 
       foreach range n_skill_level [
-        set level-required-list lput (random 10 + 1) level-required-list
+        set level-required-list lput (random 50 + 1) level-required-list
       ]
 
       set task-level-required random n_skill_level
