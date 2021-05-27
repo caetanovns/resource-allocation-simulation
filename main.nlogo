@@ -62,15 +62,15 @@ to setup
   ask workers [
     set skill-level-list []
     set knowledge-list []
-    random-seed 47
+    ; random-seed 47
     foreach range n_skill_level [
       set skill-level-list lput (random 10 + 1) skill-level-list
-      set knowledge-list lput 0 knowledge-list
+      set knowledge-list lput (random 10 + 1) knowledge-list
     ]
 
   ]
 
-  set repository matrix:make-constant 10 worker_number 0
+  set repository matrix:make-constant n_files worker_number 0
 
 end
 
@@ -81,8 +81,10 @@ to go
     py:run "import src.tf.truckfactor as tf"
     py:set "repository" matrix:to-row-list repository
     show py:runresult "tf.start_tf(repository)"
-    ask workers [show variance knowledge-list]
+    ; ask workers [show variance knowledge-list]
     ; show repository
+    write "Varianca : " print mean [variance knowledge-list] of workers
+    ; write "Media : " print mean [mean knowledge-list] of workers
     stop
   ]
   ;setup-tasks
@@ -183,14 +185,14 @@ to add-tasks-to-doing
       set stage 1
       set color white
       set size 1.5
-      set file random 10
+      set file random n_files
     ]
 
     ask tasks [
       set level-required-list []
 
       foreach range n_skill_level [
-        set level-required-list lput (random 10 + 1) level-required-list
+        set level-required-list lput (random 50 + 1) level-required-list
       ]
 
       set task-level-required random n_skill_level
@@ -221,7 +223,7 @@ to set-tasks-done
           set level item tsk-lv-required knowledge-list
           set knowledge-list remove-item tsk-lv-required knowledge-list
           set knowledge-list insert-item tsk-lv-required knowledge-list (level + item tsk-lv-required lr-list)
-          matrix:set repository file_h who (matrix:get repository file_h who) + tsk-lv-required
+          matrix:set repository file_h who (matrix:get repository file_h who) + item tsk-lv-required lr-list
         ]
       ]
 
@@ -239,21 +241,22 @@ to create-sprint
   if sprint-status = 1 and n-sprint < n_sprints [
 
     add-tasks-to-doing
-    fill-matrix
+    fill-matrix2
     py:setup "venv/bin/python"
     py:run "import src.ga as ga"
     py:set "repository" matrix:to-row-list repository
     py:set "agents_table" matrix:to-row-list workers_table
     py:set "tasks_table" matrix:to-row-list tasks_table
+    py:set "type" approach_type
     let result nobody
-    set result py:runresult "ga.main(repository, agents_table, tasks_table)"
+    set result py:runresult "ga.main(repository, agents_table, tasks_table, type)"
 
 
 
     py:setup "venv/bin/python"
     py:run "import src.tf.truckfactor as tf"
     py:set "repository" matrix:to-row-list repository
-    ; show py:runresult "tf.start_tf(repository)"
+    show py:runresult "tf.start_tf(repository)"
     ; show repository
     ; ask workers [show variance knowledge-list]
     ; show result
@@ -292,11 +295,36 @@ to fill-matrix
   let j 0
 
   foreach tasks_ids [x ->
-    ask task x [ matrix:set-row tasks_table j level-required-list ]
+    ask task x [ matrix:set-row tasks_table j level-required-list]
     set j j + 1
   ]
 end
 
+to fill-matrix2
+  set workers_table matrix:make-constant worker_number n_skill_level 0
+
+  set tasks_table matrix:make-constant task_number 3 0
+
+  let workers_ids nobody
+  set workers_ids sort [who] of workers
+
+  let i 0
+
+  foreach workers_ids [x ->
+    ask worker x [ matrix:set-row workers_table i skill-level-list ]
+    set i i + 1
+  ]
+
+  let tasks_ids nobody
+  set tasks_ids sort [who] of tasks with [stage = 1]
+
+  let j 0
+
+  foreach tasks_ids [x ->
+    ask task x [ matrix:set-row tasks_table j (list (item  task-level-required level-required-list)task-level-required file)]
+    set j j + 1
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 481
@@ -439,8 +467,8 @@ SLIDER
 task_number
 task_number
 1
-20
-5.0
+40
+20.0
 1
 1
 NIL
@@ -465,10 +493,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count tasks"
 
 SWITCH
-10
-353
-183
-386
+8
+415
+181
+448
 show-task-level?
 show-task-level?
 0
@@ -483,8 +511,8 @@ SLIDER
 worker_number
 worker_number
 2
-10
-5.0
+20
+10.0
 1
 1
 NIL
@@ -522,10 +550,31 @@ INPUTBOX
 181
 346
 n_sprints
-10.0
+50.0
 1
 0
 Number
+
+INPUTBOX
+9
+350
+181
+410
+n_files
+6.0
+1
+0
+Number
+
+CHOOSER
+9
+464
+147
+509
+approach_type
+approach_type
+"GA" "Random" "Best"
+2
 
 @#$#@#$#@
 ## WHAT IS IT?

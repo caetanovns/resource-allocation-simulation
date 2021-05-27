@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import random
 import time
@@ -8,73 +7,99 @@ from deap import tools
 from numpy.random import seed
 from numpy.random import randint
 
-agents_table = pd.DataFrame.from_records([
-    [4, 4, 9, 1, 0, 23],
-    [2, 4, 4, 1, 0, 10],
-    [8, 3, 9, 26, 35, 85],
-    [3, 1, 4, 8, 4, 11],
-    [9, 3, 6, 7, 6, 20],
-    [0, 3, 8, 7, 6, 20],
-])
+np_task_table = np.array([])
+np_agents_table = np.array([])
+np_repository = np.array([])
 
-tasks_table = pd.DataFrame.from_records([
-    [0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1],
-    [2, 2, 2, 2, 2, 2],
-    [3, 3, 3, 3, 3, 3],
-    [4, 4, 4, 4, 4, 4],
-    [5, 5, 5, 5, 5, 5],
-    [6, 6, 6, 6, 6, 6],
-    [7, 7, 7, 7, 7, 7],
-    [8, 8, 8, 8, 8, 8],
-    [9, 9, 9, 9, 9, 9],
-    [10, 10, 10, 10, 10, 10],
-]
-)
+# np.random.seed(32)
 
-np_task_table = np.array([[0, 0, 0, 0, 0, 0],
-                          [1, 1, 1, 1, 1, 1],
-                          [2, 2, 2, 2, 2, 2],
-                          [3, 3, 3, 3, 3, 3],
-                          [4, 4, 4, 4, 4, 4],
-                          [5, 5, 5, 5, 5, 5],
-                          [6, 6, 6, 6, 6, 6],
-                          [7, 7, 7, 7, 7, 7],
-                          [8, 8, 8, 8, 8, 8],
-                          [9, 9, 9, 9, 9, 9],
-                          [10, 10, 10, 10, 10, 10],
-                          ])
+# np_agents_table = np.random.rand(5, 6)
+# np_task_table = np.random.randint(10, 3)
+# np_repository = np.array([])
 
-np_agents_table = np.array([
-    [0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1],
-    [2, 2, 2, 2, 2, 2],
-    [3, 3, 3, 3, 3, 3],
-    [4, 4, 4, 4, 4, 4],
-])
+# 0 - Weight's Task
+# 1 - Knowledge list
+# 2 - File
+# np_agents_table = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+# np_task_table = np.array([[1, 0, 1], [1, 1, 1], [1, 2, 0]])
+# np_repository = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
+np_agents_table = np.array([[10, 11], [11, 12]])
+np_task_table = np.array([[10, 0, 999], [10, 1, 999]])
+
+
+# np_agents_table = np.array([[4, 2, 1], [1, 1, 1], [1, 0, 1]])
+# np_task_table = np.array([[1, 2, 4], [0, 1, 0]])
+
+# np_agents_table = np.array([[10, 0, 0, 1], [10, 5, 5, 6], [0, 10, 5, 4]])
+# np_task_table = np.array([[1, 2, 4], [0, 1, 0]])
+
+def calculate_doa(repository):
+    doa = np.zeros(dtype=int, shape=(repository.shape[0], repository.shape[1]))
+
+    index = 0
+    for i in repository:
+        doa[index, np.argmax(i, axis=0)] = 1
+        index += 1
+    return doa
+
+
+def removeTopOfAuthors(a):
+    authors_contributions = np.sum(a, axis=0)
+    author = np.argmax(authors_contributions, axis=0)
+    a = np.delete(a, author, 1)
+    return a
+
+
+def getCoverage(n_files, authors_mapped):
+    return np.sum(authors_mapped) / n_files
+
+
+def calculate_truck_factor(rep_mapped, n_files, n_developers):
+    files_size = n_files
+    tf = 0
+    for i in range(n_developers):
+        coverage = getCoverage(files_size, rep_mapped)
+        if coverage < 0.5:
+            break
+        rep_mapped = removeTopOfAuthors(rep_mapped)
+        tf += 1
+    return tf
+
+
+def start_tf(repository):
+    repository = np.array(repository)
+    rep_mapped = calculate_doa(repository)
+    return calculate_truck_factor(rep_mapped, repository.shape[0], repository.shape[1])
 
 
 def chromosome():
-    return random.choices(range(0, len(agents_table)), k=len(tasks_table))
+    return random.choices(range(0, len(np_agents_table)), k=len(np_task_table))
 
 
 def evaluate(individual):
     individual = individual[0]
     result_list = []
     for i in range(len(individual)):
-        # agent_skills = list(agents_table.iloc[individual[i], 0:agents_table.shape[1]])
-        # skills_required = list(tasks_table.iloc[i, 0:tasks_table.shape[1]])
-        agent_skills = np_agents_table[individual[i]]
-        skills_required = np_task_table[i]
-        # result_list.append(1)
-        result_list.append(
-            round(np.var([x + y for x, y in zip(agent_skills, skills_required)]))
-        )
+        agent_skills = list(np_agents_table[individual[i]])
+        skills_required = list(np_task_table[i])
+        # result_list.append(
+        #    round(np.var([x + y for x, y in zip(agent_skills, skills_required)]))
+        # )
 
-    hist, bins = np.histogram(individual, bins=np.arange(agents_table.shape[1] + 1))
+        np_list = []
+
+        for j in range(len(agent_skills)):
+            np_list.append(agent_skills[j] + skills_required[j])
+
+        # result_list.append(round(np.var(np_list)))
+        result_list.append(np.var(np_list))
+
+    hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
 
     note_1 = np.mean(result_list)
     note_2 = np.var(hist)
+    # print(note_1)
     return [note_1 + note_2]
 
 
@@ -82,20 +107,37 @@ def evaluate2(individual):
     individual = individual[0]
     result_list = []
     for i in range(len(individual)):
-        # agent_skills = list(agents_table.iloc[individual[i], 0:agents_table.shape[1]])
-        # skills_required = list(tasks_table.iloc[individual[i], 0:tasks_table.shape[1]])
-        agent_skills = list([1, 2, 3])
-        skills_required = list([1, 2, 3])
-        # result_list.append(1)
-        result_list.append(
-            round(np.var([x + y for x, y in zip(agent_skills, skills_required)]))
-        )
+        agent_skills = list(np_agents_table[individual[i]])
+        skills_required = list(np_task_table[i])
+        task_level_required = skills_required[0]
+        task_knowledge = skills_required[1]
+        task_file = skills_required[2]
+        agent_skills[task_knowledge] = agent_skills[task_knowledge] + task_level_required
+        result_list.append(np.var(agent_skills))
 
-    hist, bins = np.histogram(individual, bins=np.arange(agents_table.shape[1] + 1))
+    hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
 
     note_1 = np.mean(result_list)
     note_2 = np.var(hist)
+    # print(note_1)
     return [note_1 + note_2]
+
+
+def evaluate3(individual):
+    individual = individual[0]
+    for i in range(len(individual)):
+        agent = individual[i]
+        skills_required = list(np_task_table[i])
+        task_level_required = skills_required[0]
+        task_file = skills_required[2]
+        np_repository[task_file][agent] = np_repository[task_file][agent] + task_level_required
+
+    truck_factor = start_tf(np_repository)
+
+    hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
+    note_2 = np.var(hist)
+    # print(truck_factor - note_2)
+    return [truck_factor - note_2]
 
 
 def find_best_individual(toolbox):
@@ -122,7 +164,7 @@ def find_best_individual(toolbox):
     while g < 50:
         # A new generation
         g = g + 1
-        print("-- Generation %i --" % g)
+        # print("-- Generation %i --" % g)
 
         # Select the next generation individuals
         offspring = toolbox.select(pop, len(pop))
@@ -157,26 +199,43 @@ def find_best_individual(toolbox):
         sum2 = sum(x * x for x in fits)
         std = abs(sum2 / length - mean ** 2) ** 0.5
 
-    best = pop[np.argmin([toolbox.evaluate(x) for x in pop])]
+    best = pop[np.argmax([toolbox.evaluate(x) for x in pop])]
     return best
 
 
-def main(repository, a_table, t_table):
-    # print(pd.DataFrame.from_records(repository))
+# Adicionar mecanismo de maximo de tarefas para o agente e assim fazer com que escolha o segundo mais indicado.
+def best_agent_skill():
+    individual = []
+    for i in range(len(np_task_table)):
+        task = list(np_task_table[i])
+        task_level_required = task[0]
+        knowledge_skill = task[1]
+        best_agent_index = np_agents_table[:, knowledge_skill].argmax()
+        np_agents_table[best_agent_index, knowledge_skill] += task_level_required
+        individual.append(best_agent_index)
 
-    global agents_table
-    global tasks_table
+    return individual
 
-    agents_table = pd.DataFrame.from_records(a_table)
-    tasks_table = pd.DataFrame.from_records(t_table)
 
-    # random.seed(47)
-    # values = randint(0, agents_table.shape[0], tasks_table.shape[0])
-    # print(evaluate(values))
-    # return values
+def main(repository, a_table, t_table, type):
+    global np_agents_table
+    global np_task_table
+    global np_repository
 
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMin)
+    np_agents_table = np.array(a_table)
+    np_task_table = np.array(t_table)
+    np_repository = np.array(repository)
+
+    if type == 'Random':
+        values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
+        return values
+
+    if type == 'Best':
+        individual = best_agent_skill()
+        return individual
+
+    creator.create("FitnessMax", base.Fitness, weights=(+1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
 
@@ -184,40 +243,19 @@ def main(repository, a_table, t_table):
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate)
+    toolbox.register("evaluate", evaluate3)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
 
-    # pop = toolbox.population(n=1)
-
-    # print(evaluate(pop[0]))
-    # return [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-
     best_solution = find_best_individual(toolbox)
-    # print(best_solution[0])
-    # hist, bins = np.histogram(best_solution[0], bins=np.arange(agents_table.shape[1] + 1))
-    # print(hist)
-    # print(evaluate(best_solution))
-    # print(round(np.var(evaluate(best_solution))))
     return best_solution[0]
 
 
 def main_test():
-    # print(pd.DataFrame.from_records(repository))
-    global agents_table
-    global tasks_table
-
-    agents_table = pd.DataFrame.from_records([
-        [0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1],
-        [2, 2, 2, 2, 2, 2],
-        [3, 3, 3, 3, 3, 3],
-        [4, 4, 4, 4, 4, 4],
-    ])
-
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMin)
+    # creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("FitnessMax", base.Fitness, weights=(+1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
 
@@ -225,20 +263,22 @@ def main_test():
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate)
+    toolbox.register("evaluate", evaluate3)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
 
     best_solution = find_best_individual(toolbox)
     print(best_solution[0])
-    hist, bins = np.histogram(best_solution[0], bins=np.arange(agents_table.shape[0] + 1))
+    hist, bins = np.histogram(best_solution[0], bins=np.arange(np_agents_table.shape[0] + 1))
     print(hist)
     return best_solution[0]
 
 
 if __name__ == '__main__':
     start = time.time()
-    main_test()
+    # main_test()
+    # print(best_agent_skill())
+    # print(np_agents_table)
     end = time.time()
     print(f"Runtime of the program is {end - start}")
