@@ -38,39 +38,41 @@ breed [tasks task]
 to setup
 
   __clear-all-and-reset-ticks
+  random-seed 42
+  ;set approach_type one-of ["Random" "Best" "GA"]
+  ;set worker_number one-of [12]
+  ;set task_number one-of [10]
+  ;set n_skill_level one-of [10]
+  ;set n_sprints one-of [50]
+  ;set n_files one-of [12]
+
   setup-turtles
   set n-sprint 0
   set sprint-status 1
   ask patches [ set pcolor white]
-  ; Quantidade de energia que o funcionário produz emcima da tarefa.
+  ; Quantidade de energia que o funcionário produz em cima da tarefa.
   ask workers [set color red set skill-level (random 10) + 1]
-  ;ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
 
-  ;ask tasks [
-
-    ;set level-required-list []
-
-    ;foreach range n_skill_level [
-    ;  set level-required-list lput (random 10 + 1) level-required-list
-    ;]
-
-    ;set task-level-required random n_skill_level
-    ;set level-required ((item task-level-required level-required-list) * 100)
-
-  ;]
+  file-open "data/test_case_1.txt"
+  file-write approach_type
+  file-write task_number
+  file-write worker_number
+  file-write n_skill_level
+  file-write n_sprints
+  file-write n_files
+  file-close-all
 
   ask workers [
     set skill-level-list []
     set knowledge-list []
-    ; random-seed 47
     foreach range n_skill_level [
       set skill-level-list lput (random 10 + 1) skill-level-list
       set knowledge-list lput (random 10 + 1) knowledge-list
     ]
-
   ]
 
   set repository matrix:make-constant n_files worker_number 0
+
 
 end
 
@@ -78,18 +80,24 @@ to go
 
   if n-sprint >= n_sprints [
     py:setup "venv/bin/python"
-    py:run "import src.tf.truckfactor as tf"
+    ;py:run "import src.tf.truckfactor as tf"
     py:set "repository" matrix:to-row-list repository
-    show py:runresult "tf.start_tf(repository)"
+    ;show py:runresult "tf.start_tf(repository)"
     ; ask workers [show variance knowledge-list]
     ; show repository
-    write "Varianca : " print mean [variance knowledge-list] of workers
+    ; write "Varianca : " print mean [variance knowledge-list] of workers
     ; write "Media : " print mean [mean knowledge-list] of workers
+    ;file-open "data/test_case_1.txt"
+    ;file-print ""
+    ;file-close-all
+    show matrix:pretty-print-text repository
+    ;py:setup "venv/bin/python"
+    py:run "import src.ga as ga"
+    ;py:set "repository" matrix:to-row-list repository
+    py:run "print(ga.evaluate_repository(repository))"
+    ; setup
     stop
   ]
-  ;setup-tasks
-  ;add-tasks-to-doing
-
   create-sprint
   set-run-tasks
   set-tasks-done
@@ -106,14 +114,6 @@ to setup-turtles
     set color blue
   ]
 
-  ;create-tasks task_number [
-  ;  set xcor random 15 set ycor random-ycor
-  ;  set color gray
-  ;  set shape "letter sealed"
-  ;  set stage 1
-  ;  set file random 10
-  ;]
-
   create-managers 1 [
     setxy 0 5
     set color yellow
@@ -126,36 +126,6 @@ to setup-turtles
 
 end
 
-to setup-tasks
-    ask workers [
-    set my-current-task one-of other tasks with [color = white]
-    if count(my-links) = 0 [set color red]
-
-    if my-current-task != nobody and color = red [
-      create-link-to my-current-task
-      set color blue
-      let weight_task nobody
-      let tsk-lv-required nobody
-      let level nobody
-      let file_h nobody
-      ask my-current-task [
-        set color yellow
-        set shape "letter opened"
-        set weight_task weight
-        set tsk-lv-required task-level-required
-        set file_h file
-      ]
-
-      set level item tsk-lv-required knowledge-list
-      set knowledge-list remove-item tsk-lv-required knowledge-list
-      set knowledge-list insert-item tsk-lv-required knowledge-list (level + 1)
-      matrix:set repository file_h who (matrix:get repository file_h who) + 1
-
-    ]
-  ]
-end
-
-; Esta função faz com que seja realizada a tarefa pelo agente, através do link é possível saber qual o agente que se associa a tarefa.
 to set-run-tasks
 
   ask links [
@@ -192,7 +162,8 @@ to add-tasks-to-doing
       set level-required-list []
 
       foreach range n_skill_level [
-        set level-required-list lput (random 50 + 1) level-required-list
+        ; set level-required-list lput ((random 100) + 1) level-required-list
+        set level-required-list lput one-of [1 5 10] level-required-list
       ]
 
       set task-level-required random n_skill_level
@@ -250,20 +221,23 @@ to create-sprint
     py:set "type" approach_type
     let result nobody
     set result py:runresult "ga.main(repository, agents_table, tasks_table, type)"
-
-
-
+    ; show result
     py:setup "venv/bin/python"
     py:run "import src.tf.truckfactor as tf"
     py:set "repository" matrix:to-row-list repository
-    show py:runresult "tf.start_tf(repository)"
+    let tf 0
+    set tf py:runresult "tf.start_tf(repository)"
+    ;show tf
+    file-open "data/test_case_1.txt"
+    file-write tf
+    file-close-all
     ; show repository
     ; ask workers [show variance knowledge-list]
     ; show result
 
     let tasks_ids nobody
     set tasks_ids sort [who] of tasks with [stage = 1]
-    ;show tasks_ids
+    ; show tasks_ids
 
     let i 0
     foreach result [x ->
@@ -461,14 +435,14 @@ count links
 
 SLIDER
 5
-167
+199
 177
-200
+232
 task_number
 task_number
 1
 40
-20.0
+10.0
 1
 1
 NIL
@@ -494,9 +468,9 @@ PENS
 
 SWITCH
 8
-415
+447
 181
-448
+480
 show-task-level?
 show-task-level?
 0
@@ -505,14 +479,14 @@ show-task-level?
 
 SLIDER
 7
-208
+240
 180
-241
+273
 worker_number
 worker_number
 2
 20
-10.0
+5.0
 1
 1
 NIL
@@ -520,14 +494,14 @@ HORIZONTAL
 
 SLIDER
 7
-251
+283
 180
-284
+316
 n_skill_level
 n_skill_level
 1
 30
-5.0
+1.0
 1
 1
 NIL
@@ -546,35 +520,35 @@ n-sprint
 
 INPUTBOX
 8
-286
+318
 181
-346
+378
 n_sprints
-50.0
+10.0
 1
 0
 Number
 
 INPUTBOX
 9
-350
+382
 181
-410
+442
 n_files
-6.0
+1.0
 1
 0
 Number
 
 CHOOSER
-9
-464
-147
-509
+6
+143
+178
+188
 approach_type
 approach_type
 "GA" "Random" "Best"
-2
+0
 
 @#$#@#$#@
 ## WHAT IS IT?

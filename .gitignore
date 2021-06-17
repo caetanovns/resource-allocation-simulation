@@ -2,3 +2,4 @@ env/
 .vscode/
 .idea/
 .main.tmp.netlogo
+venv/

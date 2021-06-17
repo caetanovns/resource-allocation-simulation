@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # np.random.seed(41)
 # repository = np.random.randint(0, 99, (n_files, n_developers))
 
@@ -21,8 +22,8 @@ def removeTopOfAuthors(a):
     return a
 
 
-def getCoverage(n_files,authors_mapped):
-    return np.sum(authors_mapped)/n_files
+def getCoverage(n_files, authors_mapped):
+    return np.sum(authors_mapped) / n_files
 
 
 def calculate_truck_factor(rep_mapped, n_files, n_developers):
@@ -41,3 +42,34 @@ def start_tf(repository):
     repository = np.array(repository)
     rep_mapped = calculate_doa(repository)
     return calculate_truck_factor(rep_mapped, repository.shape[0], repository.shape[1])
+
+
+def main_test():
+    # repository = np.random.randint(0, 99, (3, 3))
+    '''
+    repository = [[1, 0, 0, 0, 0, 0],
+                  [0, 1, 0, 0, 0, 0],
+                  [0, 0, 1, 0, 0, 0],
+                  [0, 0, 0, 1, 0, 0],
+                  [0, 0, 0, 0, 1, 0],
+                  [0, 0, 0, 0, 0, 1],
+                  ]
+    # SCENE TF 2 DEV 2
+    repository = [[1, 0],
+                  [0, 1],
+                  ]
+    '''
+
+    repository = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1],
+    ]
+
+    print(repository)
+    print(start_tf(repository))
+
+
+# main_test()

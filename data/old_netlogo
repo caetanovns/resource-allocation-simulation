@@ -1,0 +1,28 @@
+to setup-tasks
+    ask workers [
+    set my-current-task one-of other tasks with [color = white]
+    if count(my-links) = 0 [set color red]
+
+    if my-current-task != nobody and color = red [
+      create-link-to my-current-task
+      set color blue
+      let weight_task nobody
+      let tsk-lv-required nobody
+      let level nobody
+      let file_h nobody
+      ask my-current-task [
+        set color yellow
+        set shape "letter opened"
+        set weight_task weight
+        set tsk-lv-required task-level-required
+        set file_h file
+      ]
+
+      set level item tsk-lv-required knowledge-list
+      set knowledge-list remove-item tsk-lv-required knowledge-list
+      set knowledge-list insert-item tsk-lv-required knowledge-list (level + 1)
+      matrix:set repository file_h who (matrix:get repository file_h who) + 1
+
+    ]
+  ]
+end
