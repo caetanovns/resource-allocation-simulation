@@ -90,7 +90,7 @@ to go
     ;file-open "data/test_case_1.txt"
     ;file-print ""
     ;file-close-all
-    show matrix:pretty-print-text repository
+    print matrix:pretty-print-text repository
     ;py:setup "venv/bin/python"
     py:run "import src.ga as ga"
     ;py:set "repository" matrix:to-row-list repository
@@ -163,7 +163,7 @@ to add-tasks-to-doing
 
       foreach range n_skill_level [
         ; set level-required-list lput ((random 100) + 1) level-required-list
-        set level-required-list lput one-of [1 5 10] level-required-list
+        set level-required-list lput one-of [1] level-required-list
       ]
 
       set task-level-required random n_skill_level
@@ -535,7 +535,7 @@ INPUTBOX
 181
 442
 n_files
-1.0
+2.0
 1
 0
 Number
