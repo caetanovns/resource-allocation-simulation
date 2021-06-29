@@ -35,6 +35,8 @@ breed [workers worker]
 breed [managers manager]
 breed [tasks task]
 
+
+
 to setup
 
   __clear-all-and-reset-ticks
@@ -53,7 +55,7 @@ to setup
   ; Quantidade de energia que o funcionário produz em cima da tarefa.
   ask workers [set color red set skill-level (random 10) + 1]
 
-  file-open "data/test_case_1.txt"
+  file-open approach_type
   file-write approach_type
   file-write task_number
   file-write worker_number
@@ -81,20 +83,20 @@ to go
   if n-sprint >= n_sprints [
     py:setup "venv/bin/python"
     ;py:run "import src.tf.truckfactor as tf"
-    py:set "repository" matrix:to-row-list repository
+    ;py:set "repository" matrix:to-row-list repository
     ;show py:runresult "tf.start_tf(repository)"
     ; ask workers [show variance knowledge-list]
     ; show repository
     ; write "Varianca : " print mean [variance knowledge-list] of workers
     ; write "Media : " print mean [mean knowledge-list] of workers
-    ;file-open "data/test_case_1.txt"
-    ;file-print ""
-    ;file-close-all
-    print matrix:pretty-print-text repository
+    file-open approach_type
+    file-print ""
+    file-close-all
+    ;print matrix:pretty-print-text repository
     ;py:setup "venv/bin/python"
-    py:run "import src.ga as ga"
+    ;py:run "import src.ga as ga"
     ;py:set "repository" matrix:to-row-list repository
-    py:run "print(ga.evaluate_repository(repository))"
+    ;py:run "print(ga.evaluate_repository(repository))"
     ; setup
     stop
   ]
@@ -147,6 +149,7 @@ to set-run-tasks
 end
 
 to add-tasks-to-doing
+
   if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
@@ -163,11 +166,13 @@ to add-tasks-to-doing
 
       foreach range n_skill_level [
         ; set level-required-list lput ((random 100) + 1) level-required-list
-        set level-required-list lput one-of [1] level-required-list
+        set level-required-list lput one-of [2 4 8 8 8] level-required-list
       ]
 
       set task-level-required random n_skill_level
-      set level-required ((item task-level-required level-required-list) * 1)
+      set level-required ((item task-level-required level-required-list))
+      set weight level-required
+
     ]
     set n-sprint (n-sprint + 1)
   ]
@@ -221,14 +226,14 @@ to create-sprint
     py:set "type" approach_type
     let result nobody
     set result py:runresult "ga.main(repository, agents_table, tasks_table, type)"
-    ; show result
+    show result
     py:setup "venv/bin/python"
     py:run "import src.tf.truckfactor as tf"
     py:set "repository" matrix:to-row-list repository
     let tf 0
     set tf py:runresult "tf.start_tf(repository)"
-    ;show tf
-    file-open "data/test_case_1.txt"
+    show tf
+    file-open approach_type
     file-write tf
     file-close-all
     ; show repository
@@ -298,6 +303,14 @@ to fill-matrix2
     ask task x [ matrix:set-row tasks_table j (list (item  task-level-required level-required-list)task-level-required file)]
     set j j + 1
   ]
+end
+
+to-report append-words [ws xs]
+  report map [[w] -> append-word w xs] ws
+end
+
+to-report append-word [w xs]
+  report map [[x] -> (word w " " x)] xs
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -442,7 +455,7 @@ task_number
 task_number
 1
 40
-10.0
+40.0
 1
 1
 NIL
@@ -486,7 +499,7 @@ worker_number
 worker_number
 2
 20
-5.0
+12.0
 1
 1
 NIL
@@ -501,7 +514,7 @@ n_skill_level
 n_skill_level
 1
 30
-1.0
+6.0
 1
 1
 NIL
@@ -524,7 +537,7 @@ INPUTBOX
 181
 378
 n_sprints
-10.0
+20.0
 1
 0
 Number
@@ -535,7 +548,7 @@ INPUTBOX
 181
 442
 n_files
-2.0
+150.0
 1
 0
 Number
@@ -547,8 +560,44 @@ CHOOSER
 188
 approach_type
 approach_type
-"GA" "Random" "Best"
-0
+"data/ga.txt" "data/random.txt" "data/best.txt"
+2
+
+PLOT
+7
+507
+308
+740
+Files
+NIL
+NIL
+0.0
+50.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -10873583 true "" "histogram [file] of tasks"
+
+PLOT
+318
+506
+680
+740
+Level Required
+NIL
+NIL
+0.0
+10.0
+0.0
+5.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -15302303 true "histogram [weight] of tasks" "histogram [weight] of tasks"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -933,7 +982,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

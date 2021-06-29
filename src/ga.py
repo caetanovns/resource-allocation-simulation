@@ -172,7 +172,7 @@ def find_best_individual(toolbox):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.3, 0.1
+    CXPB, MUTPB = 0.1, 0.1
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -253,16 +253,17 @@ def main(repository, a_table, t_table, type):
     np_task_table = np.array(t_table)
     np_repository = np.array(repository)
 
-    if type == 'Random':
-        # np.random.seed(32)
+    if type == 'data/random.txt':
+        np.random.seed(32)
         values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
         return values
+        return random.shuffle(values)
 
-    if type == 'Best':
+    if type == 'data/best.txt':
         individual = best_agent_skill()
         return individual
 
-    creator.create("FitnessMax", base.Fitness, weights=(-1.0,))
+    creator.create("FitnessMax", base.Fitness, weights=(+1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
@@ -271,7 +272,7 @@ def main(repository, a_table, t_table, type):
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate4)
+    toolbox.register("evaluate", evaluate3)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)

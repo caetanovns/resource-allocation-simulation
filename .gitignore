@@ -3,3 +3,5 @@ env/
 .idea/
 .main.tmp.netlogo
 venv/
+*.pyc
+data/*.txt
