@@ -7,6 +7,12 @@ extensions
 globals [
   n-sprint
   repository
+  sprint-status
+
+  workers_table
+  tasks_table
+
+  truck_factor_list
 ]
 
 tasks-own [
@@ -31,71 +37,67 @@ breed [workers worker]
 breed [managers manager]
 breed [tasks task]
 
+
+
 to setup
 
   __clear-all-and-reset-ticks
+  random-seed 42
+  ;set approach_type one-of ["Random" "Best" "GA"]
+  ;set worker_number one-of [12]
+  ;set task_number one-of [10]
+  ;set n_skill_level one-of [10]
+  ;set n_sprints one-of [50]
+  ;set n_files one-of [12]
+
   setup-turtles
-  set n-sprint 1
+  set n-sprint 0
+  set sprint-status 1
   ask patches [ set pcolor white]
-  ask workers [set color red set skill-level (random 5) + 1]
-  ask tasks [ if my-current-assigned = 0 and stage = 1 [set color white]]
+  ; Quantidade de energia que o funcionário produz em cima da tarefa.
+  ask workers [set color red set skill-level (random 10) + 1]
 
-  ask tasks [
-
-    set level-required-list []
-
-    foreach range n_skill_level [
-      set level-required-list lput (random 10 + 1) level-required-list
-    ]
-
-    set task-level-required random n_skill_level
-    set level-required ((item task-level-required level-required-list) * 100)
-
-  ]
+  ;file-open approach_type
 
   ask workers [
     set skill-level-list []
     set knowledge-list []
-
     foreach range n_skill_level [
       set skill-level-list lput (random 10 + 1) skill-level-list
-      set knowledge-list lput 0 knowledge-list
+      set knowledge-list lput (random 10 + 1) knowledge-list
     ]
-
   ]
-
-  set repository matrix:make-constant 10 worker_number 0
-
+  set truck_factor_list []
+  set repository matrix:make-constant n_files worker_number 0
 end
 
 to go
-  if n-sprint >= n_sprints [
-    ask workers
-    [
-      write "Agente : " print who
-      write "Média : " print mean knowledge-list
-      write "Variancia : " print variance knowledge-list
-      write "STDev : " print standard-deviation knowledge-list
-      write "Median : " print median knowledge-list
-      write "Min : " print min knowledge-list
-      write "Max : " print max knowledge-list
-      write "Dataset : " print knowledge-list
-      print "---------"
-    ]
-    write "Sprints" print n_sprints
-    write "Média : " print mean [mean knowledge-list] of workers
-    write "Variancia : " print mean [variance knowledge-list] of workers
-    write "STDev : " print mean [standard-deviation knowledge-list] of workers
-    write "Median : " print mean [median knowledge-list] of workers
-    write "Min : " print mean [min knowledge-list] of workers
-    write "Max : " print mean [max knowledge-list] of workers
-    print "---------"
 
-    stop ]
-  setup-tasks
-  add-tasks-to-doing
+  if n-sprint >= n_sprints [
+    py:setup "venv/bin/python"
+    ; write "Varianca : " print mean [variance knowledge-list] of workers
+    ; write "Media : " print mean [mean knowledge-list] of workers
+    file-open approach_type
+    file-write
+    file-write task_number
+    file-write worker_number
+    file-write n_skill_level
+    file-write n_sprints
+    file-write n_files
+    file-write mean truck_factor_list
+    file-write round variance truck_factor_list
+    file-write median truck_factor_list
+    file-write max truck_factor_list
+    file-write min truck_factor_list
+    file-print ""
+    file-close-all
+    ;setup
+    ;stop
+  ]
+  create-sprint
   set-run-tasks
   set-tasks-done
+
   tick
 end
 
@@ -108,14 +110,6 @@ to setup-turtles
     set color blue
   ]
 
-  create-tasks task_number [
-    set xcor random 15 set ycor random-ycor
-    set color gray
-    set shape "letter sealed"
-    set stage 1
-    set file random 10
-  ]
-
   create-managers 1 [
     setxy 0 5
     set color yellow
@@ -126,36 +120,6 @@ to setup-turtles
     set size 1.5
   ]
 
-end
-
-to setup-tasks
-    ask workers [
-    set my-current-task one-of other tasks with [color = white]
-    if count(my-links) = 0 [set color red]
-
-    if my-current-task != nobody and color = red [
-      create-link-to my-current-task
-      set color blue
-      let weight_task nobody
-      let tsk-lv-required nobody
-      let level nobody
-      let file_h nobody
-      ask my-current-task [
-        set color yellow
-        set shape "letter opened"
-        set weight_task weight
-        set tsk-lv-required task-level-required
-        set file_h file
-      ]
-
-      set level item tsk-lv-required knowledge-list
-      set knowledge-list remove-item tsk-lv-required knowledge-list
-      set knowledge-list insert-item tsk-lv-required knowledge-list (level + 1)
-      matrix:set repository file_h who (matrix:get repository file_h who) + 1
-
-
-    ]
-  ]
 end
 
 to set-run-tasks
@@ -179,6 +143,7 @@ to set-run-tasks
 end
 
 to add-tasks-to-doing
+
   if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
@@ -187,18 +152,20 @@ to add-tasks-to-doing
       set stage 1
       set color white
       set size 1.5
-      set file random 10
+      set file random n_files
     ]
 
     ask tasks [
       set level-required-list []
 
       foreach range n_skill_level [
-        set level-required-list lput (random 10 + 1) level-required-list
+        set level-required-list lput one-of [2 4 8 8 8] level-required-list
       ]
 
       set task-level-required random n_skill_level
-      set level-required ((item task-level-required level-required-list) * 100)
+      set level-required ((item task-level-required level-required-list))
+      set weight level-required
+
     ]
     set n-sprint (n-sprint + 1)
   ]
@@ -208,12 +175,130 @@ to set-tasks-done
   ask tasks [
     if level-required <= 0
     [
+      let weight_task nobody
+      let tsk-lv-required nobody
+      let level nobody
+      let file_h nobody
+      let lr-list nobody
+
+      set weight_task weight
+      set tsk-lv-required task-level-required
+      set file_h file
+      set lr-list level-required-list
+
+      ask my-links [
+        ask end1 [
+          set level item tsk-lv-required knowledge-list
+          set knowledge-list remove-item tsk-lv-required knowledge-list
+          set knowledge-list insert-item tsk-lv-required knowledge-list (level + item tsk-lv-required lr-list)
+          matrix:set repository file_h who (matrix:get repository file_h who) + item tsk-lv-required lr-list
+        ]
+      ]
+
       ask my-links [die]
       set stage 2
       set color red
       hide-turtle
     ]
   ]
+  if length [who] of tasks with [stage = 1] = 0 [set sprint-status 1]
+end
+
+to create-sprint
+
+  if sprint-status = 1 and n-sprint < n_sprints [
+
+    add-tasks-to-doing
+    fill-matrix2
+
+    py:setup "venv/bin/python"
+    py:run "import src.ga as ga"
+    py:set "repository" matrix:to-row-list repository
+    py:set "agents_table" matrix:to-row-list workers_table
+    py:set "tasks_table" matrix:to-row-list tasks_table
+    py:set "type" approach_type
+    let result nobody
+    set result py:runresult "ga.main(repository, agents_table, tasks_table, type)"
+    ;show result
+
+    py:setup "venv/bin/python"
+    py:run "import src.tf.truckfactor as tf"
+    py:set "repository" matrix:to-row-list repository
+    let tf 0
+    set tf py:runresult "tf.start_tf(repository)"
+    show tf
+    set truck_factor_list lput tf truck_factor_list
+
+    let tasks_ids nobody
+    set tasks_ids sort [who] of tasks with [stage = 1]
+
+    let i 0
+    foreach result [x ->
+      ask worker x [ create-link-to task item i tasks_ids ]
+      set i i + 1
+    ]
+    set sprint-status 0
+  ]
+end
+
+to fill-matrix
+  set workers_table matrix:make-constant worker_number n_skill_level 0
+
+  set tasks_table matrix:make-constant task_number n_skill_level 0
+
+  let workers_ids nobody
+  set workers_ids sort [who] of workers
+
+  let i 0
+
+  foreach workers_ids [x ->
+    ask worker x [ matrix:set-row workers_table i skill-level-list ]
+    set i i + 1
+  ]
+
+  let tasks_ids nobody
+  set tasks_ids sort [who] of tasks with [stage = 1]
+
+  let j 0
+
+  foreach tasks_ids [x ->
+    ask task x [ matrix:set-row tasks_table j level-required-list]
+    set j j + 1
+  ]
+end
+
+to fill-matrix2
+  set workers_table matrix:make-constant worker_number n_skill_level 0
+
+  set tasks_table matrix:make-constant task_number 3 0
+
+  let workers_ids nobody
+  set workers_ids sort [who] of workers
+
+  let i 0
+
+  foreach workers_ids [x ->
+    ask worker x [ matrix:set-row workers_table i skill-level-list ]
+    set i i + 1
+  ]
+
+  let tasks_ids nobody
+  set tasks_ids sort [who] of tasks with [stage = 1]
+
+  let j 0
+
+  foreach tasks_ids [x ->
+    ask task x [ matrix:set-row tasks_table j (list (item  task-level-required level-required-list)task-level-required file)]
+    set j j + 1
+  ]
+end
+
+to-report append-words [ws xs]
+  report map [[w] -> append-word w xs] ws
+end
+
+to-report append-word [w xs]
+  report map [[x] -> (word w " " x)] xs
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -351,14 +436,14 @@ count links
 
 SLIDER
 5
-167
+199
 177
-200
+232
 task_number
 task_number
 1
-20
-20.0
+40
+40.0
 1
 1
 NIL
@@ -383,10 +468,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count tasks"
 
 SWITCH
-10
-353
-183
-386
+8
+447
+181
+480
 show-task-level?
 show-task-level?
 0
@@ -395,14 +480,14 @@ show-task-level?
 
 SLIDER
 7
-208
+240
 180
-241
+273
 worker_number
 worker_number
 2
-10
-5.0
+20
+12.0
 1
 1
 NIL
@@ -410,14 +495,14 @@ HORIZONTAL
 
 SLIDER
 7
-251
+283
 180
-284
+316
 n_skill_level
 n_skill_level
 1
-10
-10.0
+30
+6.0
 1
 1
 NIL
@@ -436,14 +521,71 @@ n-sprint
 
 INPUTBOX
 8
-286
+318
 181
-346
+378
 n_sprints
 10.0
 1
 0
 Number
+
+INPUTBOX
+9
+382
+181
+442
+n_files
+150.0
+1
+0
+Number
+
+CHOOSER
+6
+143
+178
+188
+approach_type
+approach_type
+"data/ga.txt" "data/random.txt" "data/best.txt"
+2
+
+PLOT
+7
+507
+308
+740
+Files
+NIL
+NIL
+0.0
+50.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -10873583 true "" "histogram [file] of tasks"
+
+PLOT
+318
+506
+680
+740
+Level Required
+NIL
+NIL
+0.0
+10.0
+0.0
+5.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -15302303 true "histogram [weight] of tasks" "histogram [weight] of tasks"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -828,7 +970,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
