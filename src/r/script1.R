@@ -178,7 +178,7 @@ boxplot(interacoes_UECE_tutores_computacao_InteracoesAtividades$Inte,interacoes_
 dev.off()
 
 
-
+## AQUIIIIIIIIIIIIII
 
 #Boxplot comparação entre interações e medias
 
@@ -283,6 +283,7 @@ capture.output(hb, file="~/Dropbox/doutorado/disciplinas/Cin-Ufpe/Estatisitica/p
 
 # Lilliefors (Kolmogorov-Smirnov) test for normality
 
+###################################### AQUI 22222
 
 # test de Spearman
 # 

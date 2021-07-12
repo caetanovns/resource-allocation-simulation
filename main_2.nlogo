@@ -42,14 +42,15 @@ breed [tasks task]
 to setup
 
   __clear-all-and-reset-ticks
-  random-seed 42
+  ; random-seed 42
   ;set approach_type one-of ["Random" "Best" "GA"]
   ;set worker_number one-of [12]
   ;set task_number one-of [10]
   ;set n_skill_level one-of [10]
   ;set n_sprints one-of [50]
   ;set n_files one-of [12]
-
+  file-open "data/environments.txt"
+  print file-read-line
   setup-turtles
   set n-sprint 0
   set sprint-status 1

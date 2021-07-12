@@ -1,0 +1,7 @@
+
+	One-sample Kolmogorov-Smirnov test
+
+data:  (best$mean - mean(best$mean))/sd(best$mean)
+D = 0.26397, p-value = 0.5574
+alternative hypothesis: two-sided
+

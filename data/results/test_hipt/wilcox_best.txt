@@ -1,0 +1,8 @@
+Wilcoxon Best
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  best$mean and best$mean
+W = 40.5, p-value = 0.5183
+alternative hypothesis: true location shift is greater than 0
+
