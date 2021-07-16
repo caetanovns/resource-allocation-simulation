@@ -2,6 +2,7 @@ extensions
 [
   py
   matrix
+  csv
 ]
 
 globals [
@@ -43,14 +44,18 @@ to setup
 
   __clear-all-and-reset-ticks
   ; random-seed 42
-  ;set approach_type one-of ["Random" "Best" "GA"]
-  ;set worker_number one-of [12]
-  ;set task_number one-of [10]
-  ;set n_skill_level one-of [10]
-  ;set n_sprints one-of [50]
-  ;set n_files one-of [12]
-  file-open "data/environments.txt"
-  print file-read-line
+  ;print "iniciou"
+  ;let line nobody
+  ;file-open "data/environments.csv"
+  ;set line csv:from-row file-read-line
+  ;print line
+  ;set approach_type item 0 line
+  ;set worker_number item 1 line
+  ;set task_number item 2 line
+  ;set n_skill_level item 3 line
+  ;set n_sprints item 4 line
+  ;set n_files item 5 line
+  ;file-close-all
   setup-turtles
   set n-sprint 0
   set sprint-status 1
@@ -73,9 +78,12 @@ to setup
 end
 
 to go
-
+  ;print n-sprint
   if n-sprint >= n_sprints [
     py:setup "venv/bin/python"
+    py:run "import src.ga as ga"
+    py:set "repository" matrix:to-row-list repository
+    show py:runresult "ga.analyzing_repository_doa(repository)"
     ; write "Varianca : " print mean [variance knowledge-list] of workers
     ; write "Media : " print mean [mean knowledge-list] of workers
     file-open approach_type
@@ -160,7 +168,7 @@ to add-tasks-to-doing
       set level-required-list []
 
       foreach range n_skill_level [
-        set level-required-list lput one-of [2 4 8 8 8] level-required-list
+        set level-required-list lput one-of [2 4 8 16 32 64 128] level-required-list
       ]
 
       set task-level-required random n_skill_level
@@ -443,8 +451,8 @@ SLIDER
 task_number
 task_number
 1
-40
-40.0
+80
+10.0
 1
 1
 NIL
@@ -487,8 +495,8 @@ SLIDER
 worker_number
 worker_number
 2
-20
-12.0
+40
+5.0
 1
 1
 NIL
@@ -526,7 +534,7 @@ INPUTBOX
 181
 378
 n_sprints
-10.0
+5.0
 1
 0
 Number
@@ -537,7 +545,7 @@ INPUTBOX
 181
 442
 n_files
-150.0
+10.0
 1
 0
 Number
@@ -550,7 +558,7 @@ CHOOSER
 approach_type
 approach_type
 "data/ga.txt" "data/random.txt" "data/best.txt"
-2
+1
 
 PLOT
 7

@@ -8,9 +8,10 @@ from numpy.random import seed
 from numpy.random import randint
 import time
 
-np_task_table = np.array([])
-np_agents_table = np.array([])
-np_repository = np.array([])
+
+# np_task_table = np.array([])
+# np_agents_table = np.array([])
+# np_repository = np.array([])
 
 
 # np.random.seed(32)
@@ -22,9 +23,9 @@ np_repository = np.array([])
 # 0 - Weight's Task
 # 1 - Knowledge list
 # 2 - File
-# np_agents_table = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-# np_task_table = np.array([[1, 0, 1], [1, 1, 1], [1, 2, 0]])
-# np_repository = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+# np_agents_table = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
+# np_task_table = np.array([[1, 0, 1], [1, 1, 1], [1, 0, 1], [1, 1, 1]])
+# np_repository = np.array([[1, 0, 0], [0, 1, 0]])
 
 
 # np_agents_table = np.array([[10, 11], [11, 12]])
@@ -36,6 +37,20 @@ np_repository = np.array([])
 
 # np_agents_table = np.array([[10, 0, 0, 1], [10, 5, 5, 6], [0, 10, 5, 4]])
 # np_task_table = np.array([[1, 2, 4], [0, 1, 0]])
+
+def analyzing_repository_doa(repository):
+    np_rep = np.array(repository)
+    doa = np.zeros(dtype=int, shape=(np_rep.shape[0], np_rep.shape[1]))
+
+    index = 0
+    for i in np_rep:
+        doa[index, np.argmax(i, axis=0)] = 1
+        index += 1
+    time.sleep(1)
+    print(doa)
+    time.sleep(1)
+    return "OK"
+
 
 def calculate_doa(repository):
     doa = np.zeros(dtype=int, shape=(repository.shape[0], repository.shape[1]))
@@ -237,6 +252,30 @@ def best_agent_skill():
     return individual
 
 
+def random_agent():
+    # np.random.seed(32)
+    task_agent_number = round(np_task_table.shape[0] / np_agents_table.shape[0])
+    if task_agent_number == 0:
+        task_agent_number = 1
+    agents_tmp = []
+    values = []
+    for i in range(np_agents_table.shape[0]):
+        for j in range(task_agent_number):
+            agents_tmp.append(i)
+
+    for i in range(np_task_table.shape[0]):
+        if len(agents_tmp) > 0:
+            item = random.randint(0, len(agents_tmp) - 1)
+            values.append(agents_tmp[item])
+            agents_tmp.pop(item)
+        else:
+            item = random.randint(0, np_agents_table.shape[0] - 1)
+            values.append(item)
+
+    # values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
+    return values
+
+
 def evaluate_repository(repository):
     for i in np.array(repository):
         time.sleep(1)
@@ -254,10 +293,7 @@ def main(repository, a_table, t_table, type):
     np_repository = np.array(repository)
 
     if type == 'data/random.txt':
-        np.random.seed(32)
-        values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
-        return values
-        return random.shuffle(values)
+        return random_agent()
 
     if type == 'data/best.txt':
         individual = best_agent_skill()
@@ -306,5 +342,7 @@ def main_test():
 
 
 if __name__ == '__main__':
+    pass
     # main_test()
-    evaluate_repository()
+    # evaluate_repository()
+    # random_agent()
