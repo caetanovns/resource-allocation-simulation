@@ -1,5 +1,5 @@
 import pandas as pd
-
+'''
 approaches = ['best', 'random', 'ga']
 
 for i in approaches:
@@ -14,3 +14,7 @@ for i in approaches:
         read_file.to_csv("../data/csv/" + i + ".csv", index=False)
     except:
         pass
+'''
+
+read = pd.read_csv('../data/csv/case_20.csv')
+print(read.head(10))

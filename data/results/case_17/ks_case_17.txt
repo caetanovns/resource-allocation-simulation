@@ -1,0 +1,21 @@
+
+	One-sample Kolmogorov-Smirnov test
+
+data:  case_1$tf_ga
+D = 0.27905, p-value = 0.01871
+alternative hypothesis: two-sided
+
+
+	One-sample Kolmogorov-Smirnov test
+
+data:  case_1$tf_best
+D = 0.32599, p-value = 0.003404
+alternative hypothesis: two-sided
+
+
+	One-sample Kolmogorov-Smirnov test
+
+data:  case_1$tf_random
+D = 0.43834, p-value = 1.969e-05
+alternative hypothesis: two-sided
+

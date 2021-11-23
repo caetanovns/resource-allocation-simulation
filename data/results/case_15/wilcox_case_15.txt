@@ -1,0 +1,21 @@
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  case_1$tf_ga and case_1$tf_random
+W = 689.5, p-value = 6.035e-05
+alternative hypothesis: true location shift is greater than 0
+
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  case_1$tf_ga and case_1$tf_random
+W = 689.5, p-value = 0.9999
+alternative hypothesis: true location shift is less than 0
+
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  case_1$tf_ga and case_1$tf_random
+W = 689.5, p-value = 0.0001207
+alternative hypothesis: true location shift is not equal to 0
+

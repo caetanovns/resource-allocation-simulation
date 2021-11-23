@@ -1,4 +1,4 @@
-best_path <- paste0(getwd(), "/data/results/best.csv")
+# best_path <- paste0(getwd(), "/data/results/best.csv")
 
 best_path <- paste0(getwd(), "/data/csv/best.csv")
 random_path <- paste0(getwd(), "/data/csv/random.csv")
@@ -57,11 +57,24 @@ hipt_best <- ks.test((best$mean - mean(best$mean)) / sd(best$mean),
                      "pnorm", mean = 0, sd = 1)
 capture.output(hipt_best, file = paste0(getwd(), "/data/results/test_hipt/ks.txt"))
 
+hipt_best <- ks.test((random$mean - mean(random$mean)) / sd(random$mean),
+                     "pnorm", mean = 0, sd = 1)
+capture.output(hipt_best, file = paste0(getwd(), "/data/results/test_hipt/ks.txt"), append = TRUE)
+
+hipt_best <- ks.test((ga$mean - mean(ga$mean)) / sd(ga$mean),
+                     "pnorm", mean = 0, sd = 1)
+capture.output(hipt_best, file = paste0(getwd(), "/data/results/test_hipt/ks.txt"), append = TRUE)
 
 ##################### Checar Shapiro ##################################
 
 shapiro_best <- shapiro.test(best$mean)
 capture.output(shapiro_best, file = paste0(getwd(), "/data/results/test_hipt/shapiro.txt"))
+
+shapiro_best <- shapiro.test(random$mean)
+capture.output(shapiro_best, file = paste0(getwd(), "/data/results/test_hipt/shapiro.txt"), append = TRUE)
+
+shapiro_best <- shapiro.test(ga$mean)
+capture.output(shapiro_best, file = paste0(getwd(), "/data/results/test_hipt/shapiro.txt"), append = TRUE)
 
 ##################### Checar Spearman #################################
 
@@ -73,8 +86,13 @@ capture.output(shapiro_best, file = paste0(getwd(), "/data/results/test_hipt/sha
 
 ##################### Checar Correlação ###############################
 sink(paste0(getwd(), "/data/results/relation.txt"))
-cat("Correlação Best\n")
+cat("Correlação Sprints/Mean Best\n")
 print(cor(rank(best$sprints), rank(best$mean)))
+sink()
+
+sink(paste0(getwd(), "/data/results/relation.txt"))
+cat("Correlação Workers/Mean Best\n")
+print(cor(rank(best$workers), rank(best$mean)))
 sink()
 
 ##################### Checar Wilcox ##################################

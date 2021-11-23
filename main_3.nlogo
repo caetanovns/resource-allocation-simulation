@@ -14,7 +14,9 @@ globals [
   tasks_table
 
   truck_factor_list
-  var_list
+  sprint_time
+
+  backlog_task_number
 ]
 
 tasks-own [
@@ -33,6 +35,7 @@ workers-own [
   skill-level
   skill-level-list
   knowledge-list
+  hours_work_day
 ]
 
 breed [workers worker]
@@ -44,27 +47,16 @@ breed [tasks task]
 to setup
 
   __clear-all-and-reset-ticks
-  ;random-seed 43
-  ;print "iniciou"
-  ;let line nobody
-  ;file-open "data/environments.csv"
-  ;set line csv:from-row file-read-line
-  ;print line
-  ;set approach_type item 0 line
-  ;set worker_number item 1 line
-  ;set task_number item 2 line
-  ;set n_skill_level item 3 line
-  ;set n_sprints item 4 line
-  ;set n_files item 5 line
-  ;file-close-all
+  ; random-seed 42
   setup-turtles
+  set sprint_time 1
   set n-sprint 0
-  set sprint-status 1
+  set sprint-status "planning"
+  set backlog_task_number backlog
   ask patches [ set pcolor white]
   ; Quantidade de energia que o funcionário produz em cima da tarefa.
   ask workers [set color red set skill-level (random 10) + 1]
 
-  ;file-open approach_type
 
   ask workers [
     set skill-level-list []
@@ -75,53 +67,22 @@ to setup
     ]
   ]
   set truck_factor_list []
-  set var_list []
   set repository matrix:make-constant n_files worker_number 0
 end
 
 to go
-  ;print n-sprint
-  if n-sprint >= n_sprints [
+  if backlog_task_number <= 0 [
     py:setup "venv/bin/python"
     py:run "import src.ga as ga"
     py:set "repository" matrix:to-row-list repository
-    py:set "approach" substring approach_type 5 (length approach_type - 4 )
-    show py:runresult "ga.evaluate_repository(repository, approach)"
-    print truck_factor_list
-    ; show repository
-    ;write "Varianca : " print mean [variance knowledge-list] of workers
-    ; show ticks
-    ; write "Media : " print mean [mean knowledge-list] of workers
     file-open approach_type
-    ;file-write substring approach_type 5 (length approach_type - 4 )
-    ;file-write task_number
-    ;file-write worker_number
-    ;file-write n_skill_level
-    ;file-write n_sprints
-    ;file-write n_files
-    ;file-write round mean truck_factor_list
-    ;file-write round variance truck_factor_list
-    ;file-write median truck_factor_list
-    ;file-write max truck_factor_list
-    ;file-write min truck_factor_list
-    ;file-print ""
-    file-print var_list
     file-print truck_factor_list
-    file-write task_number
-    file-write worker_number
-    file-write n_skill_level
-    file-write n_sprints
-    file-write n_files
-    file-print ""
     file-close-all
-    ;setup
     stop
   ]
   create-sprint
   set-run-tasks
   set-tasks-done
-  ; check-workers
-
   tick
 end
 
@@ -167,7 +128,7 @@ to set-run-tasks
 end
 
 to add-tasks-to-doing
-  ;random-seed 40
+
   if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
@@ -180,14 +141,10 @@ to add-tasks-to-doing
     ]
 
     ask tasks [
-
-
       set level-required-list []
 
       foreach range n_skill_level [
-        ;set level-required-list lput one-of [10 30 60 90] level-required-list
-        ;set level-required-list lput one-of [30 90 180] level-required-list
-        set level-required-list lput one-of [1] level-required-list
+        set level-required-list lput one-of [30] level-required-list
       ]
 
       set task-level-required random n_skill_level
@@ -217,7 +174,6 @@ to set-tasks-done
       ask my-links [
         ask end1 [
           set level item tsk-lv-required knowledge-list
-          set working 0
           set knowledge-list remove-item tsk-lv-required knowledge-list
           set knowledge-list insert-item tsk-lv-required knowledge-list (level + item tsk-lv-required lr-list)
           matrix:set repository file_h who (matrix:get repository file_h who) + item tsk-lv-required lr-list
@@ -227,15 +183,16 @@ to set-tasks-done
       ask my-links [die]
       set stage 2
       set color red
-      hide-turtle
+      set backlog_task_number backlog_task_number - 1
+      die
     ]
   ]
-  if length [who] of tasks with [stage = 1] = 0 [set sprint-status 1]
+  if length [who] of tasks with [stage = 1] = 0 [set sprint-status "planning"]
 end
 
 to create-sprint
 
-  if sprint-status = 1 and n-sprint < n_sprints [
+  if sprint-status = "planning" and n-sprint < n_sprints [
 
     add-tasks-to-doing
     fill-matrix2
@@ -252,41 +209,21 @@ to create-sprint
 
     py:setup "venv/bin/python"
     py:run "import src.tf.truckfactor as tf"
-    py:run "import src.ga as ga"
     py:set "repository" matrix:to-row-list repository
     let tf 0
-    let var_repo 0
     set tf py:runresult "tf.start_tf(repository)"
-    ;show tf
-    py:set "approach" substring approach_type 5 (length approach_type - 4 )
-    set var_repo py:runresult "ga.evaluate_repository(repository, approach)"
-
+    show tf
     set truck_factor_list lput tf truck_factor_list
-    set var_list lput var_repo var_list
 
     let tasks_ids nobody
     set tasks_ids sort [who] of tasks with [stage = 1]
 
     let i 0
     foreach result [x ->
-      ask worker x [
-        create-link-to task item i tasks_ids
-        set working 1
-      ]
+      ask worker x [ create-link-to task item i tasks_ids ]
       set i i + 1
     ]
-    set sprint-status 0
-  ]
-end
-
-to check-workers
-  ask workers [
-    ifelse working = 1
-    [set color blue]
-    [ ;set color red
-      create-link-to one-of other tasks
-      set color yellow
-    ]
+    set sprint-status "started"
   ]
 end
 
@@ -349,6 +286,11 @@ end
 to-report append-word [w xs]
   report map [[x] -> (word w " " x)] xs
 end
+
+to-report get_current_sprint
+  report int (ticks / sprint_time)
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 481
@@ -499,10 +441,10 @@ NIL
 HORIZONTAL
 
 PLOT
-204
-157
-473
-417
+193
+212
+462
+472
 Tarefas da Sprint
 time
 total
@@ -517,10 +459,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count tasks"
 
 SWITCH
-8
-447
-181
-480
+9
+526
+182
+559
 show-task-level?
 show-task-level?
 0
@@ -536,7 +478,7 @@ worker_number
 worker_number
 2
 40
-4.0
+8.0
 1
 1
 NIL
@@ -557,24 +499,13 @@ n_skill_level
 NIL
 HORIZONTAL
 
-MONITOR
-391
-91
-448
-136
-Sprint
-n-sprint
-17
-1
-11
-
 INPUTBOX
 8
 318
 181
 378
 n_sprints
-5.0
+100.0
 1
 0
 Number
@@ -585,7 +516,7 @@ INPUTBOX
 181
 442
 n_files
-8.0
+90.0
 1
 0
 Number
@@ -598,13 +529,13 @@ CHOOSER
 approach_type
 approach_type
 "data/ga.txt" "data/random.txt" "data/best.txt" "data/worse.txt" "data/mean.txt"
-0
+1
 
 PLOT
-7
-507
-308
-740
+0
+642
+301
+875
 Files
 NIL
 NIL
@@ -619,10 +550,10 @@ PENS
 "default" 1.0 1 -10873583 true "" "histogram [file] of tasks"
 
 PLOT
-318
-506
-680
-740
+311
+641
+673
+875
 Level Required
 NIL
 NIL
@@ -635,6 +566,39 @@ false
 "" ""
 PENS
 "default" 1.0 1 -15302303 true "histogram [weight] of tasks" "histogram [weight] of tasks"
+
+MONITOR
+391
+91
+448
+136
+Sprint
+get_current_sprint
+17
+1
+11
+
+INPUTBOX
+9
+452
+183
+512
+backlog
+150.0
+1
+0
+Number
+
+MONITOR
+192
+159
+256
+204
+Backlog
+backlog_task_number
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

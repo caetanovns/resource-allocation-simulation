@@ -1,8 +1,8 @@
 import numpy as np
 
 
-# np.random.seed(41)
-# repository = np.random.randint(0, 99, (n_files, n_developers))
+#np.random.seed(41)
+repository = np.random.randint(0, 1000, (20, 200))
 
 
 def calculate_doa(repository):
@@ -60,16 +60,9 @@ def main_test():
                   ]
     '''
 
-    repository = [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1],
-        [0, 0, 1],
-        [0, 0, 1],
-    ]
-
     print(repository)
     print(start_tf(repository))
+    print(calculate_doa(repository))
 
 
 # main_test()

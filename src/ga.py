@@ -8,7 +8,6 @@ from numpy.random import seed
 from numpy.random import randint
 import time
 
-
 # np_task_table = np.array([])
 # np_agents_table = np.array([])
 # np_repository = np.array([])
@@ -23,7 +22,7 @@ import time
 # 0 - Weight's Task
 # 1 - Knowledge list
 # 2 - File
-# np_agents_table = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]])
+# np_agents_table = np.array([[1, 2, 60], [4, 5, 6], [7, 8, 9], [10, 11, 12], [1, 2, 60]])
 # np_task_table = np.array([[1, 0, 1], [1, 1, 1], [1, 0, 1], [1, 1, 1]])
 # np_repository = np.array([[1, 0, 0], [0, 1, 0]])
 
@@ -46,9 +45,9 @@ def analyzing_repository_doa(repository):
     for i in np_rep:
         doa[index, np.argmax(i, axis=0)] = 1
         index += 1
-    time.sleep(1)
-    print(doa)
-    time.sleep(1)
+    # time.sleep(1)
+    # print(doa)
+    # time.sleep(1)
     return "OK"
 
 
@@ -141,6 +140,7 @@ def evaluate2(individual):
     return [note_1 + note_2]
 
 
+# Função de aptidão totalmente em cima da variável do truck factor e a distribuição das pessoas.
 def evaluate3(individual):
     individual = individual[0]
     for i in range(len(individual)):
@@ -155,9 +155,10 @@ def evaluate3(individual):
     hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
     note_2 = np.var(hist)
     # print(truck_factor - note_2)
-    return [truck_factor]
+    return [truck_factor - note_2]
 
 
+# Função de aptião é calculada avaliando a variância do repositório, onde a menor variância é mais interessante.
 def evaluate4(individual):
     individual = individual[0]
     for i in range(len(individual)):
@@ -176,7 +177,7 @@ def evaluate4(individual):
 
 
 def find_best_individual(toolbox):
-    pop = toolbox.population(n=300)
+    pop = toolbox.population(n=1000)
 
     # Evaluate the entire population
     fitnesses = list(map(toolbox.evaluate, pop))
@@ -196,7 +197,7 @@ def find_best_individual(toolbox):
     g = 0
 
     # Begin the evolution
-    while g < 50:
+    while g < 500:
         # A new generation
         g = g + 1
         # print("-- Generation %i --" % g)
@@ -254,11 +255,17 @@ def best_agent_skill():
 
 def random_agent():
     # np.random.seed(32)
+    '''
     task_agent_number = round(np_task_table.shape[0] / np_agents_table.shape[0])
     if task_agent_number == 0:
         task_agent_number = 1
     agents_tmp = []
     values = []
+
+    mean_agents_1 = []
+    for i_1 in range(len(np_agents_table)):
+        mean_agents_1.append(round(np_agents_table[i_1, :].mean()))
+
     for i in range(np_agents_table.shape[0]):
         for j in range(task_agent_number):
             agents_tmp.append(i)
@@ -271,16 +278,53 @@ def random_agent():
         else:
             item = random.randint(0, np_agents_table.shape[0] - 1)
             values.append(item)
-
-    # values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
+    '''
+    values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
     return values
 
 
-def evaluate_repository(repository):
+def worse_agent_skill():
+    individual = []
+    for i in range(len(np_task_table)):
+        task = list(np_task_table[i])
+        task_level_required = task[0]
+        knowledge_skill = task[1]
+        best_agent_index = np_agents_table[:, knowledge_skill].argmin()
+        np_agents_table[best_agent_index, knowledge_skill] += task_level_required
+        individual.append(best_agent_index)
+
+    return individual
+
+
+def mean_agent_skill():
+    task_agent_number = round(np_task_table.shape[0] / np_agents_table.shape[0])
+    if task_agent_number == 0:
+        task_agent_number = 1
+    agents_tmp = []
+    values = []
+
+    mean_agents = []
+    for i in range(len(np_agents_table)):
+        mean_agents.append(round(np_agents_table[i, :].mean()))
+
+    for i in range(np_agents_table.shape[0]):
+        for j in range(task_agent_number):
+            agents_tmp.append(np.sort(mean_agents)[-1])
+        mean_agents.remove(np.sort(mean_agents)[-1])
+
+    return agents_tmp
+
+
+def evaluate_repository(repository, approach):
+    # time.sleep(5)
+    total = []
     for i in np.array(repository):
-        time.sleep(1)
-        print("AVG: {} VAR: {} MAX: {} MIN: {}".format(round(np.average(i), 2), round(np.var(i), 2), np.max(i),
-                                                       np.min(i)))
+        total.append(round(np.var(i), 2))
+        # print("APPROACH: {} AVG: {} VAR: {} MAX: {} MIN: {}".format(approach, round(np.average(i), 2),
+                                                                    #round(np.var(i), 2), np.max(i),
+                                                                    #np.min(i)))
+    # print("RESUMO: VAR: {} MEAN: {}".format(round(np.var(total), 2), round(np.mean(total), 2)))
+    return round(np.mean(total), 2)
 
 
 def main(repository, a_table, t_table, type):
@@ -293,14 +337,23 @@ def main(repository, a_table, t_table, type):
     np_repository = np.array(repository)
 
     if type == 'data/random.txt':
+        # np.random.seed(32)
         return random_agent()
 
     if type == 'data/best.txt':
         individual = best_agent_skill()
         return individual
 
-    creator.create("FitnessMax", base.Fitness, weights=(+1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMax)
+    if type == 'data/worse.txt':
+        individual = worse_agent_skill()
+        return individual
+
+    if type == 'data/mean.txt':
+        individual = mean_agent_skill()
+        return individual
+
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
 
     toolbox = base.Toolbox()
 
@@ -308,7 +361,7 @@ def main(repository, a_table, t_table, type):
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate3)
+    toolbox.register("evaluate", evaluate4)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
@@ -316,7 +369,7 @@ def main(repository, a_table, t_table, type):
     best_solution = find_best_individual(toolbox)
     return best_solution[0]
 
-
+'''
 def main_test():
     # creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("FitnessMax", base.Fitness, weights=(+1.0,))
@@ -339,10 +392,14 @@ def main_test():
     print(hist)
     print(evaluate3(best_solution))
     return best_solution[0]
-
+'''
 
 if __name__ == '__main__':
     pass
+    # mean_agent_skill()
+    # print(mean_agents)
+    # print(np.sort(mean_agents)[-1])
+    # print(np_agents_table)
     # main_test()
     # evaluate_repository()
     # random_agent()
