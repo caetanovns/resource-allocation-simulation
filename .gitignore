@@ -3,6 +3,7 @@ env/
 .idea/
 .main.tmp.netlogo
 .main_2.tmp.netlogo
+.main_v2.tmp.netlogo
 venv/
 *.pyc
 data/*.txt
