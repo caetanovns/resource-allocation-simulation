@@ -3,6 +3,7 @@ extensions
   py
   matrix
   csv
+  array
 ]
 
 globals [
@@ -10,11 +11,18 @@ globals [
   repository
   sprint-status
 
+  commit_file_size
+
   workers_table
   tasks_table
+  file_table
+  commit_table
 
   truck_factor_list
   var_list
+
+  helper_n_values
+  global_weights
 ]
 
 tasks-own [
@@ -23,14 +31,17 @@ tasks-own [
   level-required
   level-required-list
   task-level-required
-  weight
+
+  file-list
+  change-file-list
+
   file
+  amount_file_size
 ]
 
 workers-own [
   working
   my-current-task
-  skill-level
   skill-level-list
   knowledge-list
 ]
@@ -39,20 +50,20 @@ breed [workers worker]
 breed [managers manager]
 breed [tasks task]
 
-
-
 to setup
-
   __clear-all-and-reset-ticks
 
-  ;random-seed 43
   setup-turtles
   set n-sprint 0
   set sprint-status 1
+
+  set global_weights [5 10 15 20 25]
+
+  set commit_file_size 10
+
   ask patches [ set pcolor white]
 
-  ; Quantidade de energia que o funcionário produz em cima da tarefa
-  ask workers [set color red set skill-level (random 10) + 1]
+  ask workers [set color red]
 
   ask workers [
     set skill-level-list []
@@ -68,7 +79,7 @@ to setup
 end
 
 to go
-  ;print n-sprint
+
   if n-sprint >= n_sprints [
     py:setup "venv/bin/python"
     py:run "import src.ga as ga"
@@ -108,7 +119,6 @@ to go
   create-sprint
   set-run-tasks
   set-tasks-done
-  ; check-workers
 
   tick
 end
@@ -155,7 +165,7 @@ to set-run-tasks
 end
 
 to add-tasks-to-doing
-  ;random-seed 40
+
   if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
@@ -165,22 +175,42 @@ to add-tasks-to-doing
       set color white
       set size 1.5
       set file random n_files
+      set amount_file_size one-of (range 1 commit_file_size)
     ]
 
     ask tasks [
 
-
       set level-required-list []
+      set file-list []
+      set change-file-list []
 
       foreach range n_skill_level [
         ;set level-required-list lput one-of [10 30 60 90] level-required-list
         ;set level-required-list lput one-of [30 90 180] level-required-list
-        set level-required-list lput one-of [1] level-required-list
+        set level-required-list lput one-of [20 60 120 250 50] level-required-list
       ]
+
+      let tmp_change_file array:from-list n-values amount_file_size [one-of global_weights]
+
+      let tmp_file array:from-list n-values amount_file_size [random n_files]
+
+      let diff_files (commit_file_size - amount_file_size)
+
+      let tmp_file_diff array:from-list n-values diff_files [-1]
+
+      let tmp_list array:to-list tmp_file
+      let tmp_list2 array:to-list tmp_file_diff
+
+      let tmp_change_list array:to-list tmp_change_file
+
+      let tmp_final sentence tmp_list tmp_list2
+      let tmp_change_final sentence tmp_change_list tmp_list2
+
+      set change-file-list tmp_change_final
+      set file-list tmp_final
 
       set task-level-required random n_skill_level
       set level-required ((item task-level-required level-required-list))
-      set weight level-required
 
     ]
     set n-sprint (n-sprint + 1)
@@ -196,19 +226,31 @@ to set-tasks-done
       let level nobody
       let file_h nobody
       let lr-list nobody
+      let fl nobody
+      let cfl nobody
 
-      set weight_task weight
       set tsk-lv-required task-level-required
       set file_h file
       set lr-list level-required-list
-
+      set fl file-list
+      set cfl change-file-list
       ask my-links [
         ask end1 [
           set level item tsk-lv-required knowledge-list
           set working 0
           set knowledge-list remove-item tsk-lv-required knowledge-list
           set knowledge-list insert-item tsk-lv-required knowledge-list (level + item tsk-lv-required lr-list)
-          matrix:set repository file_h who (matrix:get repository file_h who) + item tsk-lv-required lr-list
+
+          let i 0
+          foreach fl [ x ->
+            if x != -1 [
+              matrix:set repository x who (matrix:get repository x who) + item i cfl
+            ]
+            set i i + 1
+          ]
+
+          ;matrix:set repository file_h who (matrix:get repository file_h who) + item tsk-lv-required lr-list
+
         ]
       ]
 
@@ -233,9 +275,11 @@ to create-sprint
     py:set "repository" matrix:to-row-list repository
     py:set "agents_table" matrix:to-row-list workers_table
     py:set "tasks_table" matrix:to-row-list tasks_table
+    py:set "file_table" matrix:to-row-list file_table
+    py:set "update_table" matrix:to-row-list commit_table
     py:set "type" approach_type
     let result nobody
-    set result py:runresult "ga.main(repository, agents_table, tasks_table, type)"
+    set result py:runresult "ga.main(repository, agents_table, tasks_table, type, file_table, update_table)"
     ;show result
 
     py:setup "venv/bin/python"
@@ -309,6 +353,10 @@ to fill-matrix2
 
   set tasks_table matrix:make-constant task_number 3 0
 
+  set file_table matrix:make-constant task_number commit_file_size 0
+
+  set commit_table matrix:make-constant task_number commit_file_size 0
+
   let workers_ids nobody
   set workers_ids sort [who] of workers
 
@@ -325,9 +373,18 @@ to fill-matrix2
   let j 0
 
   foreach tasks_ids [x ->
-    ask task x [ matrix:set-row tasks_table j (list (item  task-level-required level-required-list)task-level-required file)]
+    ask task x [
+
+      matrix:set-row tasks_table j (list (item  task-level-required level-required-list)task-level-required file)
+
+      matrix:set-row file_table j file-list
+
+      matrix:set-row commit_table j change-file-list
+
+    ]
     set j j + 1
   ]
+
 end
 
 to-report append-words [ws xs]
@@ -480,7 +537,7 @@ task_number
 task_number
 1
 80
-10.0
+2.0
 1
 1
 NIL
@@ -524,7 +581,7 @@ worker_number
 worker_number
 2
 40
-4.0
+2.0
 1
 1
 NIL
@@ -539,7 +596,7 @@ n_skill_level
 n_skill_level
 1
 30
-6.0
+5.0
 1
 1
 NIL
@@ -573,7 +630,7 @@ INPUTBOX
 181
 442
 n_files
-8.0
+100.0
 1
 0
 Number
@@ -597,7 +654,7 @@ Files
 NIL
 NIL
 0.0
-90.0
+10.0
 0.0
 10.0
 true
@@ -1007,7 +1064,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

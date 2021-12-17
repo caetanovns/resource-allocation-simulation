@@ -11,7 +11,8 @@ import time
 # np_task_table = np.array([])
 # np_agents_table = np.array([])
 # np_repository = np.array([])
-
+# np_task_file_table
+# np_task_commit_table
 
 # np.random.seed(32)
 
@@ -177,7 +178,7 @@ def evaluate4(individual):
 
 
 def find_best_individual(toolbox):
-    pop = toolbox.population(n=1000)
+    pop = toolbox.population(n=200)
 
     # Evaluate the entire population
     fitnesses = list(map(toolbox.evaluate, pop))
@@ -188,7 +189,7 @@ def find_best_individual(toolbox):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.1, 0.1
+    CXPB, MUTPB = 0.2, 0.2
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -197,7 +198,7 @@ def find_best_individual(toolbox):
     g = 0
 
     # Begin the evolution
-    while g < 500:
+    while g < 50:
         # A new generation
         g = g + 1
         # print("-- Generation %i --" % g)
@@ -327,13 +328,17 @@ def evaluate_repository(repository, approach):
     return round(np.mean(total), 2)
 
 
-def main(repository, a_table, t_table, type):
+def main(repository, a_table, t_table, type, file_table, change_table):
     global np_agents_table
     global np_task_table
+    global np_task_file_table
+    global np_task_change_table
     global np_repository
 
     np_agents_table = np.array(a_table)
     np_task_table = np.array(t_table)
+    np_task_file_table = np.array(file_table)
+    np_task_change_table = np.array(change_table)
     np_repository = np.array(repository)
 
     if type == 'data/random.txt':
@@ -369,37 +374,21 @@ def main(repository, a_table, t_table, type):
     best_solution = find_best_individual(toolbox)
     return best_solution[0]
 
-'''
-def main_test():
-    # creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-    creator.create("FitnessMax", base.Fitness, weights=(+1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMax)
 
-    toolbox = base.Toolbox()
+def teste(repository, a_table, t_table, typem, file_table, change_table):
+    global np_agents_table
+    global np_task_table
+    global np_task_file_table
+    global np_task_change_table
+    global np_repository
 
-    toolbox.register("chromosome", chromosome)
-    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    np_agents_table = np.array(a_table)
+    np_task_table = np.array(t_table)
+    np_task_file_table = np.array(file_table)
+    np_task_change_table = np.array(change_table)
+    np_repository = np.array(repository)
+    
 
-    toolbox.register("evaluate", evaluate3)
-    toolbox.register("mate", tools.cxTwoPoint)
-    toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
-    toolbox.register("select", tools.selTournament, tournsize=3)
+    print(np_task_file_table)
 
-    best_solution = find_best_individual(toolbox)
-    print(best_solution[0])
-    hist, bins = np.histogram(best_solution[0], bins=np.arange(np_agents_table.shape[0] + 1))
-    print(hist)
-    print(evaluate3(best_solution))
-    return best_solution[0]
-'''
-
-if __name__ == '__main__':
-    pass
-    # mean_agent_skill()
-    # print(mean_agents)
-    # print(np.sort(mean_agents)[-1])
-    # print(np_agents_table)
-    # main_test()
-    # evaluate_repository()
-    # random_agent()
+    print(np_task_change_table)
