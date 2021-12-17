@@ -7,6 +7,8 @@ from deap import tools
 from numpy.random import seed
 from numpy.random import randint
 import time
+import logging
+import copy
 
 # np_task_table = np.array([])
 # np_agents_table = np.array([])
@@ -143,20 +145,22 @@ def evaluate2(individual):
 
 # Função de aptidão totalmente em cima da variável do truck factor e a distribuição das pessoas.
 def evaluate3(individual):
+    tmp_repository = copy.copy(np_repository)
+
     individual = individual[0]
     for i in range(len(individual)):
         agent = individual[i]
-        skills_required = list(np_task_table[i])
-        task_level_required = skills_required[0]
-        task_file = skills_required[2]
-        np_repository[task_file][agent] = np_repository[task_file][agent] + task_level_required
+        files = list (np_task_file_table[i])
+        for j in range(len(files)):
+            if files[j] != -1:
+                tmp_repository[files[j]][agent] = tmp_repository[files[j]][agent] + np_task_change_table[i][j]
 
-    truck_factor = start_tf(np_repository)
+    truck_factor = start_tf(tmp_repository)
 
-    hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
-    note_2 = np.var(hist)
+    #hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
+    #note_2 = np.var(hist)
     # print(truck_factor - note_2)
-    return [truck_factor - note_2]
+    return [truck_factor]
 
 
 # Função de aptião é calculada avaliando a variância do repositório, onde a menor variância é mais interessante.
@@ -176,9 +180,59 @@ def evaluate4(individual):
 
     return [variance_total]
 
+# Adaptação da simulação da evaluate4
+def evaluate5(individual):
+    tmp_repository = copy.copy(np_repository)
+
+    #logging.warn(f'Repository - {tmp_repository}')
+    individual = individual[0]
+    for i in range(len(individual)):
+        agent = individual[i]
+        files = list (np_task_file_table[i])
+        for j in range(len(files)):
+            if files[j] != -1:
+                tmp_repository[files[j]][agent] = tmp_repository[files[j]][agent] + np_task_change_table[i][j]
+
+    variance_total = 0
+
+    for i in tmp_repository:
+        variance_total += np.var(i)
+    
+    #logging.warn(f'Repository - {tmp_repository}')
+
+    # logging.warn(f'Variance - {variance_total} - Ind - {individual}')
+
+    return [variance_total]
+
+# com base no TF diteramente com o novo repositório
+def evaluate6(individual):
+    individual = individual[0]
+    for i in range(len(individual)):
+        agent = individual[i]
+        # skills_required = list(np_task_table[i])
+        # task_level_required = skills_required[0]
+        # task_file = skills_required[2]
+        files = list (np_task_file_table[i])
+        # print(files)
+        # print(np_task_change_table)
+        for j in range(len(files)):
+            if files[j] != -1:
+                np_repository[files[j]][agent] = np_repository[files[j]][agent] + np_task_change_table[i][j]
+
+    truck_factor = start_tf(np_repository)
+
+    #hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
+    #note_2 = np.var(hist)
+    # print(truck_factor - note_2)
+    variance_total = 0
+
+    for i in np_repository:
+        variance_total += np.var(i)
+    
+    return [truck_factor - variance_total]
 
 def find_best_individual(toolbox):
-    pop = toolbox.population(n=200)
+    pop = toolbox.population(n=100)
 
     # Evaluate the entire population
     fitnesses = list(map(toolbox.evaluate, pop))
@@ -189,7 +243,7 @@ def find_best_individual(toolbox):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.2, 0.2
+    CXPB, MUTPB = 0.05, 0.05
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -197,12 +251,14 @@ def find_best_individual(toolbox):
     # Variable keeping track of the number of generations
     g = 0
 
+    #logging.warn(f'---------- Starting Generations --------')
+
     # Begin the evolution
-    while g < 50:
+    while g < 10:
         # A new generation
         g = g + 1
         # print("-- Generation %i --" % g)
-
+        
         # Select the next generation individuals
         offspring = toolbox.select(pop, len(pop))
         # Clone the selected individuals
@@ -219,12 +275,15 @@ def find_best_individual(toolbox):
             if random.random() < MUTPB:
                 toolbox.mutate(mutant[0])
                 del mutant.fitness.values
+        
 
+        #logging.warn(f'---------- Starting Invalid --------')
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
+           ind.fitness.values = fit
+        #logging.warn(f'---------- Ending Invalid --------')
 
         pop[:] = offspring
 
@@ -235,8 +294,15 @@ def find_best_individual(toolbox):
         mean = sum(fits) / length
         sum2 = sum(x * x for x in fits)
         std = abs(sum2 / length - mean ** 2) ** 0.5
+        #logging.warn(f'---------- Searching Best --------')
+        best_g = pop[np.argmin([toolbox.evaluate(x) for x in pop])]
+        #logging.warn(f'---------- Found Best --------')
+        logging.warn(f'Best of Generation nª{ g } - {evaluate5(best_g)}')
 
-    best = pop[np.argmax([toolbox.evaluate(x) for x in pop])]
+    logging.warn(f'---------- GLOBAL Best --------')
+    best = pop[np.argmin([toolbox.evaluate(x) for x in pop])]
+    logging.warn(f'Final Best {evaluate5(best)}')
+
     return best
 
 
@@ -255,32 +321,8 @@ def best_agent_skill():
 
 
 def random_agent():
-    # np.random.seed(32)
-    '''
-    task_agent_number = round(np_task_table.shape[0] / np_agents_table.shape[0])
-    if task_agent_number == 0:
-        task_agent_number = 1
-    agents_tmp = []
-    values = []
-
-    mean_agents_1 = []
-    for i_1 in range(len(np_agents_table)):
-        mean_agents_1.append(round(np_agents_table[i_1, :].mean()))
-
-    for i in range(np_agents_table.shape[0]):
-        for j in range(task_agent_number):
-            agents_tmp.append(i)
-
-    for i in range(np_task_table.shape[0]):
-        if len(agents_tmp) > 0:
-            item = random.randint(0, len(agents_tmp) - 1)
-            values.append(agents_tmp[item])
-            agents_tmp.pop(item)
-        else:
-            item = random.randint(0, np_agents_table.shape[0] - 1)
-            values.append(item)
-    '''
     values = randint(0, np_agents_table.shape[0], np_task_table.shape[0])
+    logging.warn(f'Best of Generation {evaluate5([values])}')
     return values
 
 
@@ -341,6 +383,8 @@ def main(repository, a_table, t_table, type, file_table, change_table):
     np_task_change_table = np.array(change_table)
     np_repository = np.array(repository)
 
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    
     if type == 'data/random.txt':
         # np.random.seed(32)
         return random_agent()
@@ -366,29 +410,10 @@ def main(repository, a_table, t_table, type, file_table, change_table):
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate4)
+    toolbox.register("evaluate", evaluate5)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
 
     best_solution = find_best_individual(toolbox)
     return best_solution[0]
-
-
-def teste(repository, a_table, t_table, typem, file_table, change_table):
-    global np_agents_table
-    global np_task_table
-    global np_task_file_table
-    global np_task_change_table
-    global np_repository
-
-    np_agents_table = np.array(a_table)
-    np_task_table = np.array(t_table)
-    np_task_file_table = np.array(file_table)
-    np_task_change_table = np.array(change_table)
-    np_repository = np.array(repository)
-    
-
-    print(np_task_file_table)
-
-    print(np_task_change_table)

@@ -1,5 +1,5 @@
-filename <- 'case_20'
-simulation <- 'Simulation 5'
+filename <- 'case_7'
+simulation <- 'Simulation 1'
 case_1_path <- paste0(getwd(), paste0(paste0("/data/csv/", filename), ".csv"))
 
 case_1 <- read.csv(case_1_path, sep = ",")
@@ -13,7 +13,7 @@ png(paste0(getwd(), "/data/results/", filename, '/imgs/histogram_', filename, '.
 layout(matrix(c(1, 1, 2, 3), 2, 2, byrow = TRUE),
        widths = c(5, 5), heights = c(5, 5))
 hist(case_1$tf_ga, main = "GA", xlab = "Truck Factor", ylab = "Frequencia", xlim=c(0,7),col = "blue")
-hist(case_1$tf_best, main = "Best", xlab = "Truck Factor", ylab = "Frequencia", xlim=c(0,7),col = "green")
+hist(case_1$tf_best, main = "Optimistic", xlab = "Truck Factor", ylab = "Frequencia", xlim=c(0,7),col = "green")
 hist(case_1$tf_random, main = "Random", xlab = "Truck Factor", ylab = "Frequencia", xlim=c(0,7),col = "red")
 dev.off()
 
@@ -22,7 +22,7 @@ dev.off()
 png(paste0(getwd(), "/data/results/", filename, '/imgs/boxplot_', filename, '.png'))
 boxplot(case_1$tf_ga, case_1$tf_best, case_1$tf_random,
         main = "Truck Factor", xlab = "Abordagens", ylab = "Truck Factor", varwidth = TRUE,
-        names = c("GA", "Best", "Random"), col = c("blue", "green", "red"))
+        names = c("GA", "Optimistic", "Random"), col = c("blue", "green", "red"))
 dev.off()
 
 #png(paste0(getwd(), "/data/results/", filename, '/imgs/boxplot_variance', filename, '.png'))
@@ -37,7 +37,7 @@ png(paste0(getwd(), "/data/results/", filename, '/imgs/lines_truck_factor_', fil
 plot(case_1$tf_ga,type = "l",col = "#4285f4", xlab = "Sprint", ylab = "Truck Factor", main = simulation, lwd=3, lty=1)
 lines(case_1$tf_random, type = "l", col = "#ea4335", lwd=3, lty=2)
 lines(case_1$tf_best, type = "l", col = "#fbbc04", lwd=3, lty=3)
-legend("topleft", legend=c("GA", "Random", "Best"),col=c("#4285f4", "#ea4335", "#fbbc04"), lty = 1:3,lwd=3, cex=1)
+legend("topleft", legend=c("GA", "Random", "Optimistic"),col=c("#4285f4", "#ea4335", "#fbbc04"), lty = 1:3,lwd=3, cex=1)
 dev.off()
 
 
@@ -45,7 +45,7 @@ png(paste0(getwd(), "/data/results/", filename, '/imgs/lines_variance_', filenam
 plot(case_1$var_ga,type = "l",col = "#4285f4", xlab = "Sprint", ylab = "Variance", main = simulation,lwd=3, lty=1)
 lines(case_1$var_random, type = "l", col = "#ea4335",lwd=3, lty=2)
 lines(case_1$var_best, type = "l", col = "#fbbc04",lwd=3, lty=3)
-legend("topleft", legend=c("GA", "Random", "Best"),col=c("#4285f4", "#ea4335", "#fbbc04"), lty = 1:3, cex=1, lwd=3)
+legend("topleft", legend=c("GA", "Random", "Optimistic"),col=c("#4285f4", "#ea4335", "#fbbc04"), lty = 1:3, cex=1, lwd=3)
 dev.off()
 
 

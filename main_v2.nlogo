@@ -22,7 +22,11 @@ globals [
   var_list
 
   helper_n_values
-  global_weights
+
+  random_value_weights
+  change_file_weights
+  task_weights
+  file_weights
 ]
 
 tasks-own [
@@ -52,12 +56,15 @@ breed [tasks task]
 
 to setup
   __clear-all-and-reset-ticks
-
+  random-seed 42
   setup-turtles
   set n-sprint 0
   set sprint-status 1
 
-  set global_weights [5 10 15 20 25]
+  set task_weights [5 10 20 40 80]
+  set file_weights [1 2 4 6 8 10]
+  set change_file_weights [5 10 15 20 25]
+  set random_value_weights 5
 
   set commit_file_size 10
 
@@ -116,9 +123,12 @@ to go
     ;setup
     stop
   ]
+
+
   create-sprint
   set-run-tasks
   set-tasks-done
+  close-sprint
 
   tick
 end
@@ -166,7 +176,7 @@ end
 
 to add-tasks-to-doing
 
-  if (count tasks with [stage = 1]) = 0 [
+  if (count tasks with [stage = 1]) = 0[
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
       set color gray
@@ -175,7 +185,7 @@ to add-tasks-to-doing
       set color white
       set size 1.5
       set file random n_files
-      set amount_file_size one-of (range 1 commit_file_size)
+      ;set amount_file_size one-of (range 1 commit_file_size)
     ]
 
     ask tasks [
@@ -184,13 +194,13 @@ to add-tasks-to-doing
       set file-list []
       set change-file-list []
 
-      foreach range n_skill_level [
-        ;set level-required-list lput one-of [10 30 60 90] level-required-list
-        ;set level-required-list lput one-of [30 90 180] level-required-list
-        set level-required-list lput one-of [20 60 120 250 50] level-required-list
-      ]
+      let rand_value random random_value_weights
 
-      let tmp_change_file array:from-list n-values amount_file_size [one-of global_weights]
+      set level-required-list lput (item rand_value task_weights) level-required-list
+
+      set amount_file_size item rand_value file_weights
+
+      let tmp_change_file array:from-list n-values amount_file_size [one-of change_file_weights]
 
       let tmp_file array:from-list n-values amount_file_size [random n_files]
 
@@ -210,10 +220,10 @@ to add-tasks-to-doing
       set file-list tmp_final
 
       set task-level-required random n_skill_level
-      set level-required ((item task-level-required level-required-list))
+      set level-required first level-required-list
 
     ]
-    set n-sprint (n-sprint + 1)
+    ;set n-sprint (n-sprint + 1)
   ]
 end
 
@@ -239,7 +249,7 @@ to set-tasks-done
           set level item tsk-lv-required knowledge-list
           set working 0
           set knowledge-list remove-item tsk-lv-required knowledge-list
-          set knowledge-list insert-item tsk-lv-required knowledge-list (level + item tsk-lv-required lr-list)
+          set knowledge-list insert-item tsk-lv-required knowledge-list (level + first lr-list)
 
           let i 0
           foreach fl [ x ->
@@ -265,7 +275,7 @@ end
 
 to create-sprint
 
-  if sprint-status = 1 and n-sprint < n_sprints [
+  if sprint-status = 1 and n-sprint <= n_sprints [
 
     add-tasks-to-doing
     fill-matrix2
@@ -322,6 +332,12 @@ to check-workers
   ]
 end
 
+to close-sprint
+  if (count tasks with [stage = 1]) = 0[
+    set n-sprint (n-sprint + 1)
+  ]
+end
+
 to fill-matrix
   set workers_table matrix:make-constant worker_number n_skill_level 0
 
@@ -375,7 +391,7 @@ to fill-matrix2
   foreach tasks_ids [x ->
     ask task x [
 
-      matrix:set-row tasks_table j (list (item  task-level-required level-required-list)task-level-required file)
+      matrix:set-row tasks_table j (list (first level-required-list)task-level-required file)
 
       matrix:set-row file_table j file-list
 
@@ -537,7 +553,7 @@ task_number
 task_number
 1
 80
-2.0
+10.0
 1
 1
 NIL
@@ -580,8 +596,8 @@ SLIDER
 worker_number
 worker_number
 2
-40
-2.0
+10
+5.0
 1
 1
 NIL
@@ -596,7 +612,7 @@ n_skill_level
 n_skill_level
 1
 30
-5.0
+14.0
 1
 1
 NIL
@@ -619,7 +635,7 @@ INPUTBOX
 181
 378
 n_sprints
-5.0
+10.0
 1
 0
 Number
@@ -630,7 +646,7 @@ INPUTBOX
 181
 442
 n_files
-100.0
+10.0
 1
 0
 Number

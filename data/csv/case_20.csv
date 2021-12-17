@@ -1,4 +1,4 @@
-sprint,var_ga,var_random,var_best,tf_ga,tf_random,tf_best
+sprint,var_ga,var_random,var_optimistic,tf_ga,tf_random,tf_best
 1,0,0,0,1,1,1
 2,1756.6,1184.11,1661.27,3,4,2
 3,2604.14,2734.08,3098.08,3,4,2
