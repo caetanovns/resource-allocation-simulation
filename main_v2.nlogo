@@ -20,6 +20,9 @@ globals [
 
   truck_factor_list
   var_list
+  knowledge_mean_list
+
+  knowledge_workers_matrix
 
   helper_n_values
 
@@ -82,10 +85,15 @@ to setup
   ]
   set truck_factor_list []
   set var_list []
+  set knowledge_mean_list []
   set repository matrix:make-constant n_files worker_number 0
+
+  ;set knowledge_workers_matrix matrix:make-constant worker_number n_skill_level 0
 end
 
 to go
+
+  random-seed 42
 
   if n-sprint >= n_sprints [
     py:setup "venv/bin/python"
@@ -93,38 +101,37 @@ to go
     py:set "repository" matrix:to-row-list repository
     py:set "approach" substring approach_type 5 (length approach_type - 4 )
     show py:runresult "ga.evaluate_repository(repository, approach)"
-    print truck_factor_list
+
+    ;print truck_factor_list
     ; show repository
     ;write "Varianca : " print mean [variance knowledge-list] of workers
     ; show ticks
     ; write "Media : " print mean [mean knowledge-list] of workers
+    ;print knowledge_mean_list
+    ;append-knowledge-matrix
+    ;print mean [mean knowledge-list] of workers
     file-open approach_type
-    ;file-write substring approach_type 5 (length approach_type - 4 )
-    ;file-write task_number
-    ;file-write worker_number
-    ;file-write n_skill_level
-    ;file-write n_sprints
-    ;file-write n_files
     ;file-write round mean truck_factor_list
     ;file-write round variance truck_factor_list
     ;file-write median truck_factor_list
     ;file-write max truck_factor_list
     ;file-write min truck_factor_list
     ;file-print ""
-    file-print var_list
-    file-print truck_factor_list
     file-write task_number
     file-write worker_number
     file-write n_skill_level
     file-write n_sprints
     file-write n_files
     file-print ""
+    file-print truck_factor_list
+    file-print var_list
+    file-print knowledge_mean_list
     file-close-all
     ;setup
+    ;wait 2.5
+    ;show repository
     stop
   ]
-
-
   create-sprint
   set-run-tasks
   set-tasks-done
@@ -176,7 +183,7 @@ end
 
 to add-tasks-to-doing
 
-  if (count tasks with [stage = 1]) = 0[
+  if (count tasks with [stage = 1]) = 0 [
     create-tasks task_number [
       set xcor random 15 set ycor random-ycor
       set color gray
@@ -185,7 +192,6 @@ to add-tasks-to-doing
       set color white
       set size 1.5
       set file random n_files
-      ;set amount_file_size one-of (range 1 commit_file_size)
     ]
 
     ask tasks [
@@ -200,7 +206,7 @@ to add-tasks-to-doing
 
       set amount_file_size item rand_value file_weights
 
-      let tmp_change_file array:from-list n-values amount_file_size [one-of change_file_weights]
+      let tmp_change_file array:from-list n-values amount_file_size [item rand_value change_file_weights]
 
       let tmp_file array:from-list n-values amount_file_size [random n_files]
 
@@ -258,9 +264,6 @@ to set-tasks-done
             ]
             set i i + 1
           ]
-
-          ;matrix:set repository file_h who (matrix:get repository file_h who) + item tsk-lv-required lr-list
-
         ]
       ]
 
@@ -290,21 +293,27 @@ to create-sprint
     py:set "type" approach_type
     let result nobody
     set result py:runresult "ga.main(repository, agents_table, tasks_table, type, file_table, update_table)"
-    ;show result
 
-    py:setup "venv/bin/python"
-    py:run "import src.tf.truckfactor as tf"
-    py:run "import src.ga as ga"
-    py:set "repository" matrix:to-row-list repository
-    let tf 0
-    let var_repo 0
-    set tf py:runresult "tf.start_tf(repository)"
-    ;show tf
-    py:set "approach" substring approach_type 5 (length approach_type - 4 )
-    set var_repo py:runresult "ga.evaluate_repository(repository, approach)"
+    ;py:setup "venv/bin/python"
+    ;py:run "import src.tf.truckfactor as tf"
+    ;py:run "import src.ga as ga"
+    ;py:set "repository" matrix:to-row-list repository
+    ;let tf 0
+    ;let var_repo 0
+    ;let var_knowledge 0
+    ;set tf py:runresult "tf.start_tf(repository)"
+    ;py:set "approach" substring approach_type 5 (length approach_type - 4 )
+    ;set var_repo py:runresult "ga.evaluate_repository(repository, approach)"
+    ;show var_repo
 
-    set truck_factor_list lput tf truck_factor_list
-    set var_list lput var_repo var_list
+    ;set knowledge_workers_matrix matrix:make-constant worker_number n_skill_level 0
+    ;append-knowledge-matrix
+    ;py:set "knowledge_repository" matrix:to-row-list knowledge_workers_matrix
+    ;set var_knowledge py:runresult "ga.evaluate_repository(knowledge_repository, approach)"
+
+    ;set truck_factor_list lput tf truck_factor_list
+    ;set var_list lput var_repo var_list
+    ;set knowledge_mean_list lput var_knowledge knowledge_mean_list
 
     let tasks_ids nobody
     set tasks_ids sort [who] of tasks with [stage = 1]
@@ -335,6 +344,31 @@ end
 to close-sprint
   if (count tasks with [stage = 1]) = 0[
     set n-sprint (n-sprint + 1)
+    decrease-repository
+
+
+    py:setup "venv/bin/python"
+    py:run "import src.tf.truckfactor as tf"
+    py:run "import src.ga as ga"
+    py:set "repository" matrix:to-row-list repository
+    let tf 0
+    let var_repo 0
+    let var_knowledge 0
+    set tf py:runresult "tf.start_tf(repository)"
+    py:set "approach" substring approach_type 5 (length approach_type - 4 )
+    set var_repo py:runresult "ga.evaluate_repository(repository, approach)"
+    show var_repo
+
+    set knowledge_workers_matrix matrix:make-constant worker_number n_skill_level 0
+    append-knowledge-matrix
+    py:set "knowledge_repository" matrix:to-row-list knowledge_workers_matrix
+    set var_knowledge py:runresult "ga.evaluate_repository(knowledge_repository, approach)"
+
+    set truck_factor_list lput tf truck_factor_list
+    set var_list lput var_repo var_list
+    set knowledge_mean_list lput var_knowledge knowledge_mean_list
+
+
   ]
 end
 
@@ -403,6 +437,24 @@ to fill-matrix2
 
 end
 
+to decrease-repository
+  let rows 0
+  foreach matrix:to-row-list repository [
+    [a] -> matrix:set-row repository rows (map [i -> floor (i - i * 0.05)] a)
+    set rows (rows + 1)
+  ]
+end
+
+to append-knowledge-matrix
+  let rows 0
+
+  ask workers [
+    matrix:set-row knowledge_workers_matrix rows knowledge-list
+    set rows (rows + 1)
+  ]
+end
+
+
 to-report append-words [ws xs]
   report map [[w] -> append-word w xs] ws
 end
@@ -410,6 +462,7 @@ end
 to-report append-word [w xs]
   report map [[x] -> (word w " " x)] xs
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 481
@@ -552,8 +605,8 @@ SLIDER
 task_number
 task_number
 1
-80
-10.0
+100
+100.0
 1
 1
 NIL
@@ -596,8 +649,8 @@ SLIDER
 worker_number
 worker_number
 2
-10
-5.0
+25
+25.0
 1
 1
 NIL
@@ -612,7 +665,7 @@ n_skill_level
 n_skill_level
 1
 30
-14.0
+10.0
 1
 1
 NIL
@@ -635,7 +688,7 @@ INPUTBOX
 181
 378
 n_sprints
-10.0
+52.0
 1
 0
 Number
@@ -646,7 +699,7 @@ INPUTBOX
 181
 442
 n_files
-10.0
+300.0
 1
 0
 Number
@@ -670,9 +723,9 @@ Files
 NIL
 NIL
 0.0
-10.0
+300.0
 0.0
-10.0
+300.0
 true
 false
 "" ""

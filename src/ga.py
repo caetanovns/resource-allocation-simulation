@@ -243,7 +243,7 @@ def find_best_individual(toolbox):
     #       are crossed
     #
     # MUTPB is the probability for mutating an individual
-    CXPB, MUTPB = 0.05, 0.05
+    CXPB, MUTPB = 0.2, 0.2
 
     # Extracting all the fitnesses of
     fits = [ind.fitness.values[0] for ind in pop]
@@ -254,7 +254,7 @@ def find_best_individual(toolbox):
     #logging.warn(f'---------- Starting Generations --------')
 
     # Begin the evolution
-    while g < 10:
+    while g < 50 :
         # A new generation
         g = g + 1
         # print("-- Generation %i --" % g)
@@ -295,13 +295,13 @@ def find_best_individual(toolbox):
         sum2 = sum(x * x for x in fits)
         std = abs(sum2 / length - mean ** 2) ** 0.5
         #logging.warn(f'---------- Searching Best --------')
-        best_g = pop[np.argmin([toolbox.evaluate(x) for x in pop])]
+        best_g = pop[np.argmax([toolbox.evaluate(x) for x in pop])]
         #logging.warn(f'---------- Found Best --------')
-        logging.warn(f'Best of Generation nª{ g } - {evaluate5(best_g)}')
+        logging.warn(f'Best of Generation nª{ g } - {evaluate3(best_g)}')
 
     logging.warn(f'---------- GLOBAL Best --------')
-    best = pop[np.argmin([toolbox.evaluate(x) for x in pop])]
-    logging.warn(f'Final Best {evaluate5(best)}')
+    best = pop[np.argmax([toolbox.evaluate(x) for x in pop])]
+    logging.warn(f'Final Best {evaluate3(best)}')
 
     return best
 
@@ -401,7 +401,7 @@ def main(repository, a_table, t_table, type, file_table, change_table):
         individual = mean_agent_skill()
         return individual
 
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("FitnessMin", base.Fitness, weights=(1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
 
     toolbox = base.Toolbox()
@@ -410,7 +410,7 @@ def main(repository, a_table, t_table, type, file_table, change_table):
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate5)
+    toolbox.register("evaluate", evaluate3)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
