@@ -1,0 +1,6 @@
+
+	Shapiro-Wilk normality test
+
+data:  case_1$tf_ga
+W = 0.34386, p-value = 1.3e-13
+

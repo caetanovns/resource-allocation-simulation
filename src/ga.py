@@ -27,7 +27,7 @@ import copy
 # 2 - File
 # np_agents_table = np.array([[1, 2, 60], [4, 5, 6], [7, 8, 9], [10, 11, 12], [1, 2, 60]])
 # np_task_table = np.array([[1, 0, 1], [1, 1, 1], [1, 0, 1], [1, 1, 1]])
-# np_repository = np.array([[1, 0, 0], [0, 1, 0]])
+#np_repository = np.array([[1, 0, 0], [0, 1, 0]])
 
 
 # np_agents_table = np.array([[10, 11], [11, 12]])
@@ -59,6 +59,7 @@ def calculate_doa(repository):
 
     index = 0
     for i in repository:
+        #print(np.argmax(i, axis=0))
         doa[index, np.argmax(i, axis=0)] = 1
         index += 1
     return doa
@@ -206,30 +207,24 @@ def evaluate5(individual):
 
 # com base no TF diteramente com o novo repositório
 def evaluate6(individual):
+    tmp_repository = copy.copy(np_repository)
+
     individual = individual[0]
     for i in range(len(individual)):
         agent = individual[i]
-        # skills_required = list(np_task_table[i])
-        # task_level_required = skills_required[0]
-        # task_file = skills_required[2]
         files = list (np_task_file_table[i])
-        # print(files)
-        # print(np_task_change_table)
         for j in range(len(files)):
             if files[j] != -1:
-                np_repository[files[j]][agent] = np_repository[files[j]][agent] + np_task_change_table[i][j]
+                tmp_repository[files[j]][agent] = tmp_repository[files[j]][agent] + np_task_change_table[i][j]
 
-    truck_factor = start_tf(np_repository)
+    truck_factor = start_tf(tmp_repository)
 
-    #hist, bins = np.histogram(individual, bins=np.arange(np_agents_table.shape[1] + 1))
-    #note_2 = np.var(hist)
-    # print(truck_factor - note_2)
     variance_total = 0
 
-    for i in np_repository:
+    for i in tmp_repository:
         variance_total += np.var(i)
     
-    return [truck_factor - variance_total]
+    return [truck_factor, variance_total]
 
 def find_best_individual(toolbox):
     pop = toolbox.population(n=100)
@@ -295,13 +290,14 @@ def find_best_individual(toolbox):
         sum2 = sum(x * x for x in fits)
         std = abs(sum2 / length - mean ** 2) ** 0.5
         #logging.warn(f'---------- Searching Best --------')
-        best_g = pop[np.argmax([toolbox.evaluate(x) for x in pop])]
+        best = pop[custom_max([toolbox.evaluate(x) for x in pop])]
         #logging.warn(f'---------- Found Best --------')
-        logging.warn(f'Best of Generation nª{ g } - {evaluate3(best_g)}')
+        logging.warn(f'Best of Generation nª{ g } - {(evaluate6(best))}')
+        
 
     logging.warn(f'---------- GLOBAL Best --------')
-    best = pop[np.argmax([toolbox.evaluate(x) for x in pop])]
-    logging.warn(f'Final Best {evaluate3(best)}')
+    best = pop[custom_max([toolbox.evaluate(x) for x in pop])]
+    logging.warn(f'Final Best {evaluate6(best)}')
 
     return best
 
@@ -357,6 +353,18 @@ def mean_agent_skill():
 
     return agents_tmp
 
+def custom_max(pop):
+    #logging.warn(pop)
+
+    local = np.array(pop)
+
+    max_value = np.argmax(local[:,0])
+    min_value = np.argmin(local[:,1])
+
+    if local[max_value,:][0] > local[min_value,:][0]:
+        return max_value
+    else:
+        return min_value
 
 def evaluate_repository(repository, approach):
     # time.sleep(5)
@@ -401,8 +409,8 @@ def main(repository, a_table, t_table, type, file_table, change_table):
         individual = mean_agent_skill()
         return individual
 
-    creator.create("FitnessMin", base.Fitness, weights=(1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMin)
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,-1.0))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
 
@@ -410,10 +418,17 @@ def main(repository, a_table, t_table, type, file_table, change_table):
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.chromosome, n=1)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate3)
+    toolbox.register("evaluate", evaluate6)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
 
     best_solution = find_best_individual(toolbox)
     return best_solution[0]
+
+def test():
+    np_repository = np.array([[0, 0, 0], [0, 0, 0]])
+    print(start_tf(np_repository))
+
+
+#test()

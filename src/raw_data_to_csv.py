@@ -16,5 +16,5 @@ for i in approaches:
         pass
 '''
 
-read = pd.read_csv('../data/csv/case_20.csv')
+read = pd.read_csv('../data/csv/case_6.csv')
 print(read.head(10))

@@ -462,7 +462,6 @@ end
 to-report append-word [w xs]
   report map [[x] -> (word w " " x)] xs
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 481
@@ -606,7 +605,7 @@ task_number
 task_number
 1
 100
-100.0
+60.0
 1
 1
 NIL
@@ -650,7 +649,7 @@ worker_number
 worker_number
 2
 25
-25.0
+10.0
 1
 1
 NIL
@@ -688,7 +687,7 @@ INPUTBOX
 181
 378
 n_sprints
-52.0
+50.0
 1
 0
 Number
@@ -699,7 +698,7 @@ INPUTBOX
 181
 442
 n_files
-300.0
+150.0
 1
 0
 Number
