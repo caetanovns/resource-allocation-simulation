@@ -6,6 +6,11 @@ Este repositório faz parte e foi construído durante o mestrado acadêmico do p
 
 O algoritmo genético é utilizado para otimizar a alocação de membros da equipe de TI para várias tarefas ou projetos, garantindo uma utilização eficiente dos recursos.
 
+## Orientração
+
+- Orientador: [Prof. Dr. Marcos Antonio de Oliveira](http://lattes.cnpq.br/7658234102718482)
+- Co-orientador: [Prof. Dr. Enyo José Tavares Gonçalves](http://lattes.cnpq.br/5885621862397640)
+
 ## Tabela de Conteúdos
 
 - [Recursos](#recursos)
