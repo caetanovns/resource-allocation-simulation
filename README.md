@@ -1,26 +1,29 @@
-# Resource Allocation with Genetic Algorithm
+# Alocação de Recursos com Algoritmo Genético
+## Visão Geral
+O repositório "resource-allocation" contém código e recursos para alocação de recursos em equipes de TI usando um algoritmo genético. Este projeto utiliza sistemas multiagentes para simulação, implementados com o NetLogo, um ambiente poderoso de modelagem e simulação.
 
-## Overview
+O algoritmo genético é utilizado para otimizar a alocação de membros da equipe de TI para várias tarefas ou projetos, garantindo uma utilização eficiente dos recursos.
 
-The "resource-allocation" repository houses code and resources for resource allocation in IT teams using a genetic algorithm. This project utilizes multi-agent systems for simulation, implemented with NetLogo, a powerful modeling and simulation environment.
+## Tabela de Conteúdos
 
-The genetic algorithm is used to optimize the allocation of IT team members to various tasks or projects, ensuring efficient resource utilization.
+- [Recursos](#recursos)
+- [Requisitos](#requisitos)
+- [Agradecimentos](#agradecimentos)
 
-## Table of Contents
+## Recursos
+- **Algoritmo Genético**: Implementa um algoritmo genético para otimizar a alocação de recursos.
+- **Sistemas Multiagentes**: Utiliza o NetLogo para construir simulações de sistemas multiagentes.
+- **Alocação de Recursos**: Eficiente: Garante uma alocação eficiente de membros da equipe de TI para tarefas ou projetos.
+- **Customização**: Permite a customização de parâmetros do algoritmo e cenários de simulação.
 
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-  
-## Features
+## Requisitos
+Antes de utilizar o código neste repositório, certifique-se de ter os seguintes requisitos:
 
-- **Genetic Algorithm**: Implements a genetic algorithm to optimize resource allocation.
-- **Multi-Agent Systems**: Utilizes NetLogo for building multi-agent system simulations.
-- **Efficient Resource Allocation**: Ensures efficient allocation of IT team members to tasks or projects.
-- **Customization**: Allows customization of algorithm parameters and simulation scenarios.
+- NetLogo instalado em sua máquina.
+- Conhecimento básico de algoritmos genéticos e sistemas multiagentes.
 
-## Prerequisites
+## Agradecimentos
 
-Before using the code in this repository, make sure you have the following prerequisites:
+Gostaríamos de expressar nossa sincera gratidão à Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES) e à Universidade Federal do Ceará (UFC) campus de Quixadá, pelo apoio concedido durante o desenvolvimento deste projeto. 
 
-- [NetLogo](https://ccl.northwestern.edu/netlogo/) installed on your machine.
-- Basic knowledge of genetic algorithms and multi-agent systems.
+Este repositório faz parte e foi construído durante o mestrado acadêmico na UFC de Quixadá, representando um marco importante em nossa jornada acadêmica.
