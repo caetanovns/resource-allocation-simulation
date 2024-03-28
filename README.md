@@ -2,6 +2,8 @@
 ## Visão Geral
 O repositório "resource-allocation" contém código e recursos para alocação de recursos em equipes de TI usando um algoritmo genético. Este projeto utiliza sistemas multiagentes para simulação, implementados com o NetLogo, um ambiente poderoso de modelagem e simulação.
 
+Este repositório faz parte e foi construído durante o mestrado acadêmico do programa de mestrado PCOMP (Programa de Pós-Gradução em Computação), UFC Campús Quixadá.
+
 O algoritmo genético é utilizado para otimizar a alocação de membros da equipe de TI para várias tarefas ou projetos, garantindo uma utilização eficiente dos recursos.
 
 ## Tabela de Conteúdos
@@ -26,4 +28,4 @@ Antes de utilizar o código neste repositório, certifique-se de ter os seguinte
 
 Gostaríamos de expressar nossa sincera gratidão à Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES) e à Universidade Federal do Ceará (UFC) campus de Quixadá, pelo apoio concedido durante o desenvolvimento deste projeto. 
 
-Este repositório faz parte e foi construído durante o mestrado acadêmico na UFC de Quixadá, representando um marco importante em nossa jornada acadêmica.
+
